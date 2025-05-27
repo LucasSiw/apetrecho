@@ -10,9 +10,11 @@ export default function Home() {
       <main className="flex-1">
         <HeroSection />
         <section className="container py-8 md:py-12">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Produtos em Destaque</h2>
-            <p className="max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center px-4">
+            <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl md:text-4xl lg:text-5xl">
+              Produtos em Destaque
+            </h2>
+            <p className="max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-lg lg:text-xl">
               Confira nossa seleção de produtos de alta qualidade com os melhores preços do mercado.
             </p>
           </div>

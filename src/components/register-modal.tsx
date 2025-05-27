@@ -1,19 +1,14 @@
 "use client"
 
+import { DialogFooter } from "@/components/ui/dialog"
+
 import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/context/auth-context"
 
 interface RegisterModalProps {
@@ -53,19 +48,31 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] mx-4 w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Criar uma conta</DialogTitle>
-          <DialogDescription>Registre-se para começar a comprar e acompanhar seus pedidos.</DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Criar uma conta</DialogTitle>
+          <DialogDescription className="text-sm">
+            Registre-se para começar a comprar e acompanhar seus pedidos.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Nome completo</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Label htmlFor="name" className="text-sm">
+                Nome completo
+              </Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="text-base" // Prevents zoom on iOS
+              />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -73,26 +80,33 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="text-base" // Prevents zoom on iOS
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-sm">
+                Senha
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="text-base" // Prevents zoom on iOS
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirmPassword">Confirmar senha</Label>
+              <Label htmlFor="confirmPassword" className="text-sm">
+                Confirmar senha
+              </Label>
               <Input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                className="text-base" // Prevents zoom on iOS
               />
             </div>
           </div>
@@ -105,7 +119,7 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
         <div className="mt-4 text-center text-sm">
           <p className="text-muted-foreground">
             Já tem uma conta?{" "}
-            <Button variant="link" className="p-0" onClick={onLoginClick}>
+            <Button variant="link" className="p-0 text-sm" onClick={onLoginClick}>
               Faça login
             </Button>
           </p>

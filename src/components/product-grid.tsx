@@ -64,9 +64,12 @@ export function ProductGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 mt-8" id="produtos">
+    <div
+      className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-8 px-4 sm:px-0"
+      id="produtos"
+    >
       {products.map((product) => (
-        <Card key={product.id} className="overflow-hidden">
+        <Card key={product.id} className="overflow-hidden flex flex-col">
           <div className="aspect-square overflow-hidden">
             <img
               src={product.image || "/placeholder.svg"}
@@ -74,15 +77,15 @@ export function ProductGrid() {
               className="h-full w-full object-cover transition-all hover:scale-105"
             />
           </div>
-          <CardHeader>
-            <CardTitle>{product.name}</CardTitle>
-            <CardDescription>{product.description}</CardDescription>
+          <CardHeader className="flex-1 p-4">
+            <CardTitle className="text-base sm:text-lg line-clamp-2">{product.name}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm line-clamp-3">{product.description}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatPrice(product.price)}</div>
+          <CardContent className="p-4 pt-0">
+            <div className="text-lg sm:text-xl font-bold">{formatPrice(product.price)}</div>
           </CardContent>
-          <CardFooter>
-            <Button onClick={() => addToCart(product)} className="w-full">
+          <CardFooter className="p-4 pt-0">
+            <Button onClick={() => addToCart(product)} className="w-full text-sm">
               Adicionar ao Carrinho
             </Button>
           </CardFooter>

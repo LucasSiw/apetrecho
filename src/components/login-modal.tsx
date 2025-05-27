@@ -45,15 +45,19 @@ export function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] mx-4 w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Entrar na sua conta</DialogTitle>
-          <DialogDescription>Faça login para acessar sua conta e gerenciar seus pedidos.</DialogDescription>
+          <DialogTitle className="text-lg sm:text-xl">Entrar na sua conta</DialogTitle>
+          <DialogDescription className="text-sm">
+            Faça login para acessar sua conta e gerenciar seus pedidos.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -61,16 +65,20 @@ export function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="text-base" // Prevents zoom on iOS
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-sm">
+                Senha
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="text-base" // Prevents zoom on iOS
               />
             </div>
           </div>
@@ -83,7 +91,7 @@ export function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps
         <div className="mt-4 text-center text-sm">
           <p className="text-muted-foreground">
             Não tem uma conta?{" "}
-            <Button variant="link" className="p-0" onClick={onRegisterClick}>
+            <Button variant="link" className="p-0 text-sm" onClick={onRegisterClick}>
               Registre-se
             </Button>
           </p>
