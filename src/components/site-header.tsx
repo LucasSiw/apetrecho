@@ -25,7 +25,7 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <span className="font-bold text-lg sm:text-xl">E-Shop</span>
+          <span className="font-bold text-lg sm:text-xl">Apetrecho</span>
         </Link>
 
         {/* Desktop Navigation */}
