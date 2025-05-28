@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/context/auth-context"
-import { DocumentInput } from "@/context/controle"
+import { InputCNPJCPF } from "@/context/controle"
+import { InputTelefone } from "@/context/controle"
 
 interface RegisterModalProps {
   isOpen: boolean
@@ -85,7 +86,10 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
               />
             </div>
             <div className="grid gap-2">
-              <DocumentInput></DocumentInput>
+              <InputCNPJCPF></InputCNPJCPF>
+            </div>
+            <div className="grid gap-2">
+              <InputTelefone></InputTelefone>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password" className="text-sm">

@@ -20,7 +20,7 @@ const formatCNPJ = (value: string) =>
 
 const isCNPJ = (value: string) => value.replace(/\D/g, '').length > 11;
 
-export function DocumentInput() {
+export function InputCNPJCPF() {
   const [document, setDocument] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,3 +49,45 @@ export function DocumentInput() {
   );
 }
 
+export function InputTelefone() {
+  const [telefone, setTelefone] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value.replace(/\D/g, '');
+
+    if (raw.length > 11) raw = raw.slice(0, 11);
+
+    let formatted = raw;
+
+    if (raw.length <= 10) {
+      formatted = raw
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
+    } else {
+      formatted = raw
+        .replace(/^(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{5})(\d)/, '$1-$2');
+    }
+
+    setTelefone(formatted);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="telefone" className="text-sm">
+        Telefone
+      </Label>
+      <Input
+        id="telefone"
+        type="text"
+        inputMode="numeric"
+        placeholder="(11) 91234-5678"
+        value={telefone}
+        onChange={handleChange}
+        maxLength={15}
+        required
+        className="text-base"
+      />
+    </div>
+  );
+}
