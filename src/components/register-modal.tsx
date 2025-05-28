@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useAuth } from "@/context/auth-context"
 import { InputCNPJCPF } from "@/context/controle"
 import { InputTelefone } from "@/context/controle"
+import { InputData } from "@/context/controle"
 
 interface RegisterModalProps {
   isOpen: boolean
@@ -90,6 +91,9 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
             </div>
             <div className="grid gap-2">
               <InputTelefone></InputTelefone>
+            </div>
+            <div className="grid gap-2">
+              <InputData></InputData>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password" className="text-sm">

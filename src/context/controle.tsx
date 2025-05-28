@@ -91,3 +91,39 @@ export function InputTelefone() {
     </div>
   );
 }
+
+export function InputData() {
+  const [data, setData] = useState('');
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value.replace(/\D/g, '');
+
+    if (raw.length > 8) raw = raw.slice(0, 8);
+
+    const formatted = raw
+      .replace(/^(\d{2})(\d)/, '$1/$2')
+      .replace(/(\d{2})(\d)/, '$1/$2')
+      .replace(/(\d{4})$/, '$1');
+
+    setData(formatted);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="data" className="text-sm">
+        Data de Nascimento
+      </Label>
+      <Input
+        id="data"
+        type="text"
+        inputMode="numeric"
+        placeholder="DD/MM/AAAA"
+        value={data}
+        onChange={handleChange}
+        maxLength={10}
+        required
+        className="text-base"
+      />
+    </div>
+  );
+}
