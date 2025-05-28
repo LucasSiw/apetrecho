@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useAuth } from "@/context/auth-context"
+import { DocumentInput } from "@/context/controle"
 
 interface RegisterModalProps {
   isOpen: boolean
@@ -82,6 +83,9 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
                 required
                 className="text-base" // Prevents zoom on iOS
               />
+            </div>
+            <div className="grid gap-2">
+              <DocumentInput></DocumentInput>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password" className="text-sm">
