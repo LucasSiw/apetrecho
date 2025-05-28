@@ -8,7 +8,7 @@ import { CartProvider } from "@/context/cart-context"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "E-Shop - Sua Loja Online",
+  title: "Apetrecho",
   description: "E-commerce com os melhores produtos para você",
 }
 
