@@ -22,7 +22,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center px-4">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
           <span className="font-bold text-lg sm:text-xl">Apetrecho</span>
@@ -50,7 +50,7 @@ export function SiteHeader() {
         </nav>
 
         {/* Desktop User Menu */}
-        <div className="ml-auto hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2">
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -58,7 +58,7 @@ export function SiteHeader() {
                   <User className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 bg-background shadow-lg">
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
                     <p className="font-medium text-sm">Olá, {user.name}!</p>
@@ -85,7 +85,7 @@ export function SiteHeader() {
         </div>
 
         {/* Mobile Menu Button */}
-        <div className="ml-auto flex md:hidden items-center gap-2">
+        <div className="flex md:hidden items-center gap-2">
           {/* Cart Icon for Mobile */}
           <Link href="/carrinho" className="relative">
             <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -109,8 +109,8 @@ export function SiteHeader() {
 
       {/* Mobile Navigation Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-background">
-          <nav className="container px-4 py-4 space-y-3">
+        <div className="md:hidden border-t bg-background shadow-lg">
+          <nav className="container mx-auto px-4 py-4 space-y-3">
             <Link
               href="/"
               className="flex items-center py-2 text-sm font-medium transition-colors hover:text-primary"
