@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingCart, HelpCircle, Home, User, LogOut, Menu, X } from "lucide-react"
+import { ShoppingCart, HelpCircle, Home, User, LogOut, Menu, X, Package } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
 import { useCart } from "@/context/cart-context"
@@ -47,6 +47,15 @@ export function SiteHeader() {
             <HelpCircle className="mr-1 h-4 w-4" />
             Ajuda
           </Link>
+          {user && (
+            <Link
+              href="/meus-produtos"
+              className="flex items-center text-sm font-medium transition-colors hover:text-primary"
+            >
+              <Package className="mr-1 h-4 w-4" />
+              Meus Produtos
+            </Link>
+          )}
         </nav>
 
         {/* Desktop User Menu */}
@@ -70,6 +79,9 @@ export function SiteHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/pedidos">Meus Pedidos</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/meus-produtos">Meus Produtos</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="text-red-500">
                   <LogOut className="mr-2 h-4 w-4" />
@@ -140,6 +152,16 @@ export function SiteHeader() {
               <HelpCircle className="mr-3 h-4 w-4" />
               Ajuda
             </Link>
+            {user && (
+              <Link
+                href="/meus-produtos"
+                className="flex items-center py-2 text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Package className="mr-3 h-4 w-4" />
+                Meus Produtos
+              </Link>
+            )}
 
             <div className="pt-3 border-t">
               {user ? (
