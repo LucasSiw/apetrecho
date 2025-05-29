@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model tbClientes {
+  bdChave                      Int                            @id @default(autoincrement())
+  bdNome                       String                         @db.VarChar(100)
+  bdEmail                      String                         @unique @db.VarChar(100)
+  bdTelefone                   String?                        @db.VarChar(20)
+  bdcpf                        String?                        @unique @db.Char(14)
+  bdDTNASCIMENTO              DateTime?                      @db.Date
+  bdLogradouro                 String                         @db.VarChar(100)
+  bdNumero                     String                         @db.VarChar(10)
+  bdComplemento                String?                        @db.VarChar(50)
+  bdBairro                     String                         @db.VarChar(50)
+  bdCidade                     String                         @db.VarChar(50)
+  bdEstado                     String                         @db.Char(2)
+  bdCEP                        String                         @db.Char(9)
+  bdSenha                      String                         @db.VarChar(255) // Adicionado para autenticação
+  bdDTCriacao                  DateTime                       @default(now()) @db.Timestamp(0)
+  bdAtivo                      Boolean                        @default(true)
+  
+  // Relacionamentos
+  tbFerramentas                tbFerramentas[]
+  tbFerramentas_disponibilizadas tbFerramentas_disponibilizadas[]
+  tbAlugueis                   tbAlugueis[]
+  tbLogAtividades              tbLogAtividades[]
+}
+
+model tbFerramentas {
+  bdChave                      Int                            @id @default(autoincrement())
+  bdChaveCli                   Int
+  bdNome                       String                         @db.VarChar(100)
+  bdDescricao                  String?                        @db.Text
+  bdCategoria                  String?                        @db.VarChar(50)
+  bdURLIMG                     String?                        @db.Text
+  bdPrecoAluguel               Decimal                        @db.Decimal(10, 2)
+  bdEstado                     EstadoFerramenta               @default(disponivel)
+  bdDTCADASTRO                 DateTime                       @default(now()) @db.Timestamp(0)
+  bdAtivo                      Boolean                        @default(true)
+  
+  // Relacionamentos
+  cliente                      tbClientes                     @relation(fields: [bdChaveCli], references: [bdChave], onDelete: Cascade)
+  tbFerramentas_disponibilizadas tbFerramentas_disponibilizadas[]
+  tbAlugueis                   tbAlugueis[]
+}
+
+model tbFerramentas_disponibilizadas {
+  bdChave                      Int                            @id @default(autoincrement())
+  bdChaveFer                   Int
+  bdChaveCli                   Int
+  bdPrecoAluguel               Decimal                        @db.Decimal(10, 2)
+  bdDTDISPONIBILIZACAO        DateTime                       @default(now()) @db.Timestamp(0)
+  bdAtivo                      Boolean                        @default(true)
+  
+  // Relacionamentos
+  ferramenta                   tbFerramentas                  @relation(fields: [bdChaveFer], references: [bdChave])
+  cliente                      tbClientes                     @relation(fields: [bdChaveCli], references: [bdChave])
+}
+
+model tbAlugueis {
+  bdChave                      Int                            @id @default(autoincrement())
+  bdChaveCli                   Int
+  bdChaveFer                   Int
+  bdDTINICIO                   DateTime                       @db.Timestamp(0)
+  bdDTFIM                      DateTime?                      @db.Timestamp(0)
+  bdStatus                     StatusAluguel                  @default(ativo)
+  bdVlrTotal                   Decimal?                       @db.Decimal(10, 2)
+  
+  // Relacionamentos
+  cliente                      tbClientes                     @relation(fields: [bdChaveCli], references: [bdChave])
+  ferramenta                   tbFerramentas                  @relation(fields: [bdChaveFer], references: [bdChave])
+}
+
+model tbLogAtividades {
+  bdChave                      Int                            @id @default(autoincrement())
+  bdChaveCli                   Int
+  bdAcao                       String?                        @db.VarChar(255)
+  bdDTHR                       DateTime                       @default(now()) @db.Timestamp(0)
+  bdIPOrigm                    String?                        @db.VarChar(45)
+  bdNavegador                  String?                        @db.Text
+  
+  // Relacionamentos
+  cliente                      tbClientes                     @relation(fields: [bdChaveCli], references: [bdChave])
+}
+
+enum EstadoFerramenta {
+  disponivel @map("disponível")
+  alugada
+  manutencao @map("manutenção")
+}
+
+enum StatusAluguel {
+  ativo
+  finalizado
+  cancelado
+}

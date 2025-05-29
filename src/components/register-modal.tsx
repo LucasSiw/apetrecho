@@ -67,6 +67,7 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
               </Label>
               <Input
                 id="name"
+                placeholder="João da Silva"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
