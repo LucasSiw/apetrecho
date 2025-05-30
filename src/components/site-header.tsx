@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingCart, HelpCircle, Home, User, LogOut, Menu, X, Package } from "lucide-react"
+import { ShoppingCart, HelpCircle, Home, User, LogOut, Menu, X, Package, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
 import { useCart } from "@/context/cart-context"
+import { useFavorites } from "@/context/favorites-context"
 import { useState } from "react"
 import { LoginModal } from "@/components/login-modal"
 import { RegisterModal } from "@/components/register-modal"
@@ -14,11 +15,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 export function SiteHeader() {
   const { user, logout } = useAuth()
   const { cartItems } = useCart()
+  const { favorites } = useFavorites()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const cartItemsCount = cartItems.length
+  const favoritesCount = favorites.length
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -43,6 +46,20 @@ export function SiteHeader() {
               </Badge>
             )}
           </Link>
+          {user && (
+            <Link
+              href="/favoritos"
+              className="flex items-center text-sm font-medium transition-colors hover:text-primary"
+            >
+              <Heart className="mr-1 h-4 w-4" />
+              Favoritos
+              {favoritesCount > 0 && (
+                <Badge variant="secondary" className="ml-1 text-xs">
+                  {favoritesCount}
+                </Badge>
+              )}
+            </Link>
+          )}
           <Link href="/ajuda" className="flex items-center text-sm font-medium transition-colors hover:text-primary">
             <HelpCircle className="mr-1 h-4 w-4" />
             Ajuda
@@ -83,6 +100,9 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link href="/meus-produtos">Meus Produtos</Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/favoritos">Favoritos</Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="text-red-500">
                   <LogOut className="mr-2 h-4 w-4" />
                   Sair
@@ -112,6 +132,23 @@ export function SiteHeader() {
               )}
             </Button>
           </Link>
+
+          {/* Favorites Icon for Mobile */}
+          {user && (
+            <Link href="/favoritos" className="relative">
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Heart className="h-4 w-4" />
+                {favoritesCount > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+                  >
+                    {favoritesCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          )}
 
           <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -144,6 +181,21 @@ export function SiteHeader() {
                 </Badge>
               )}
             </Link>
+            {user && (
+              <Link
+                href="/favoritos"
+                className="flex items-center py-2 text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Heart className="mr-3 h-4 w-4" />
+                Favoritos
+                {favoritesCount > 0 && (
+                  <Badge variant="secondary" className="ml-2 text-xs">
+                    {favoritesCount}
+                  </Badge>
+                )}
+              </Link>
+            )}
             <Link
               href="/ajuda"
               className="flex items-center py-2 text-sm font-medium transition-colors hover:text-primary"

@@ -7,6 +7,7 @@ import { AuthProvider } from "@/context/auth-context"
 import { CartProvider } from "@/context/cart-context"
 import { FavoritesProvider } from "@/context/favorites-context"
 import { ProductsProvider } from "@/context/products-context"
+import { NotificationsProvider } from "@/context/notifications-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,7 +28,9 @@ export default function RootLayout({
           <AuthProvider>
             <CartProvider>
               <FavoritesProvider>
-                <ProductsProvider>{children}</ProductsProvider>
+                <ProductsProvider>
+                  <NotificationsProvider>{children}</NotificationsProvider>
+                </ProductsProvider>
               </FavoritesProvider>
             </CartProvider>
           </AuthProvider>
