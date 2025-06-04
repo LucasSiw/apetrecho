@@ -5,8 +5,7 @@ import { ProductCard } from "@/components/product-card"
 import { SearchBar } from "@/components/search-bar"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
-import { enhancedProducts } from "@/context/products-context"
-import { useProducts } from "@/context/products-context"
+import { useProducts } from "@/context/products-context" // Keep this import
 
 interface SearchFilters {
   category: string
@@ -16,7 +15,7 @@ interface SearchFilters {
 }
 
 export function ProductGridEnhanced() {
-  const { userProducts } = useProducts()
+  const { userProducts } = useProducts() // Only destructure userProducts from context
   const [searchQuery, setSearchQuery] = useState("")
   const [filters, setFilters] = useState<SearchFilters>({
     category: "Todos",
@@ -25,19 +24,37 @@ export function ProductGridEnhanced() {
     sortBy: "relevance",
   })
   const [currentPage, setCurrentPage] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const [internalLoading, setInternalLoading] = useState(false) // Use an internal loading state for search/filter delays
   const itemsPerPage = 8
 
-  // Combinar produtos do sistema com produtos do usuário
-  const allProducts = useMemo(() => {
-    return [...enhancedProducts, ...userProducts]
-  }, [userProducts])
+  // Example static products array; replace with your actual static products or import as needed
+  const staticProducts = [
+     {
+       id: "1",
+       name: "Produto Exemplo",
+       description: "Descrição do produto exemplo.",
+       category: "Categoria",
+       price: 100,
+       brand: "Marca",
+       rating: 4.5,
+       stock: 10,
+       isNew: true,
+       image: "/placeholder.png", // Add a valid image path or placeholder
+     },
+  ];
 
-  // Filtrar e ordenar produtos
+  // Combine products from the system with products from the user
+  const allProducts = useMemo(() => {
+    // Ensure userProducts is an array before spreading
+    const productsFromUser = Array.isArray(userProducts) ? userProducts : [];
+    return [...staticProducts, ...productsFromUser];
+  }, [userProducts]) // Depend on userProducts to re-calculate if they change
+
+  // Filter and sort products
   const filteredProducts = useMemo(() => {
     let filtered = allProducts
 
-    // Filtro por busca
+    // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
         (product) =>
@@ -48,15 +65,15 @@ export function ProductGridEnhanced() {
       )
     }
 
-    // Filtro por categoria
+    // Filter by category
     if (filters.category !== "Todos") {
       filtered = filtered.filter((product) => product.category === filters.category)
     }
 
-    // Filtro por preço
+    // Filter by price
     filtered = filtered.filter((product) => product.price >= filters.minPrice && product.price <= filters.maxPrice)
 
-    // Ordenação
+    // Sort
     switch (filters.sortBy) {
       case "price-asc":
         filtered.sort((a, b) => a.price - b.price)
@@ -68,39 +85,53 @@ export function ProductGridEnhanced() {
         filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
         break
       case "newest":
-        filtered.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0))
+        // Assuming 'isNew' is a boolean flag for new products
+        // Products marked as new come first, then others
+        filtered.sort((a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0));
         break
       default:
-        // Relevância (produtos em estoque primeiro, depois por rating)
+        // Relevance (in-stock products first, then by rating)
         filtered.sort((a, b) => {
-          if ((a.stock || 0) > 0 && (b.stock || 0) === 0) return -1
-          if ((a.stock || 0) === 0 && (b.stock || 0) > 0) return 1
-          return (b.rating || 0) - (a.rating || 0)
+          // Prioritize products with stock
+          const aHasStock = (a.stock || 0) > 0;
+          const bHasStock = (b.stock || 0) > 0;
+
+          if (aHasStock && !bHasStock) return -1; // a comes before b
+          if (!aHasStock && bHasStock) return 1;  // b comes before a
+
+          // If both have or don't have stock, then sort by rating
+          return (b.rating || 0) - (a.rating || 0);
         })
     }
 
     return filtered
   }, [searchQuery, filters, allProducts])
 
-  // Paginação
+  // Pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   const handleSearch = (query: string) => {
-    setLoading(true)
+    setInternalLoading(true) // Use internal loading for UI feedback
     setSearchQuery(query)
     setCurrentPage(1)
-    // Simular delay de busca
-    setTimeout(() => setLoading(false), 500)
+    setTimeout(() => setInternalLoading(false), 500) // Simulate delay
   }
 
   const handleFilter = (newFilters: SearchFilters) => {
-    setLoading(true)
+    setInternalLoading(true) // Use internal loading for UI feedback
     setFilters(newFilters)
     setCurrentPage(1)
-    // Simular delay de filtro
-    setTimeout(() => setLoading(false), 300)
+    setTimeout(() => setInternalLoading(false), 300) // Simulate delay
   }
+
+  // Determine overall loading state (either user products fetching or internal search/filter)
+  // Only use internalLoading for loading state
+  const isLoading = internalLoading;
+
+  // No error state from context
+  const hasError = false;
+
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -110,8 +141,10 @@ export function ProductGridEnhanced() {
       {/* Resultados */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {loading ? (
+          {isLoading ? (
             "Buscando produtos..."
+          ) : hasError ? (
+            `Erro ao carregar produtos: ${hasError}`
           ) : (
             <>
               Mostrando {paginatedProducts.length} de {filteredProducts.length} produtos
@@ -122,10 +155,15 @@ export function ProductGridEnhanced() {
       </div>
 
       {/* Grid de Produtos */}
-      {loading ? (
+      {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="ml-2">Carregando produtos...</span>
+        </div>
+      ) : hasError ? (
+        <div className="text-center text-red-500 py-8">
+          <p>Erro ao carregar produtos. Por favor, tente novamente.</p>
+          {/* You might want a retry button here */}
         </div>
       ) : paginatedProducts.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -141,7 +179,7 @@ export function ProductGridEnhanced() {
       )}
 
       {/* Paginação */}
-      {totalPages > 1 && !loading && (
+      {totalPages > 1 && !isLoading && !hasError && ( // Only show pagination if not loading and no error
         <div className="flex items-center justify-center gap-2 pt-8">
           <Button
             variant="outline"

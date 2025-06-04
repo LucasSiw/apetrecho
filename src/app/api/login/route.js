@@ -1,4 +1,8 @@
 import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'seu_segredo_muito_secreto_para_jwt';
 
 
 export async function POST(request) {
