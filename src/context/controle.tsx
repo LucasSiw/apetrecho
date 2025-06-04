@@ -89,95 +89,78 @@ const formatCNPJ = (value: string) =>
 
 const isCNPJ = (value: string) => value.replace(/\D/g, '').length > 11;
 
-export function InputCNPJCPF() {
-  const [document, setDocument] = useState('');
-  const [isValid, setIsValid] = useState<boolean | null>(null);
+export function InputCNPJCPF({ value, onChange }: { value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+  const [isValid, setIsValid] = useState<boolean | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value.replace(/\D/g, '');
-    const formatted = isCNPJ(raw) ? formatCNPJ(raw) : formatCPF(raw);
-    setDocument(formatted);
+    const raw = e.target.value.replace(/\D/g, '')
+    const formatted = isCNPJ(raw) ? formatCNPJ(raw) : formatCPF(raw)
+    onChange({ ...e, target: { ...e.target, value: formatted } })
 
     if (raw.length === 11) {
-      setIsValid(validateCPF(raw));
+      setIsValid(validateCPF(raw))
     } else if (raw.length === 14) {
-      setIsValid(validateCNPJ(raw));
+      setIsValid(validateCNPJ(raw))
     } else {
-      setIsValid(null);
+      setIsValid(null)
     }
-  };
+  }
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="document" className="text-sm">
-        CPF ou CNPJ
-      </Label>
+      <Label htmlFor="document">CPF ou CNPJ</Label>
       <Input
         id="document"
         type="text"
         inputMode="numeric"
         placeholder="Digite seu CPF ou CNPJ"
-        value={document}
+        value={value}
         onChange={handleChange}
         maxLength={18}
         required
         className={cn(
           "text-base",
-          isValid === false && "border-red-500 focus-visible:ring-red-500", 
-          isValid === true && "border-green-500 focus-visible:ring-green-500" 
+          isValid === false && "border-red-500 focus-visible:ring-red-500",
+          isValid === true && "border-green-500 focus-visible:ring-green-500"
         )}
       />
-      {isValid === false && (
-        <p className="text-sm text-red-500">CPF/CNPJ inválido.</p>
-      )}
-      {isValid === true && (
-        <p className="text-sm text-green-500">CPF/CNPJ válido.</p>
-      )}
+      {isValid === false && <p className="text-sm text-red-500">CPF/CNPJ inválido.</p>}
+      {isValid === true && <p className="text-sm text-green-500">CPF/CNPJ válido.</p>}
     </div>
-  );
+  )
 }
 
-export function InputTelefone() {
-  const [telefone, setTelefone] = useState('');
-  const [isValid, setIsValid] = useState<boolean | null>(null);
+export function InputTelefone({ value, onChange }: { value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
+  const [isValid, setIsValid] = useState<boolean | null>(null)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let raw = e.target.value.replace(/\D/g, '');
+    let raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 11) raw = raw.slice(0, 11)
 
-    if (raw.length > 11) raw = raw.slice(0, 11);
-
-    let formatted = raw;
-
+    let formatted = raw
     if (raw.length <= 10) {
-      formatted = raw
-        .replace(/^(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{4})(\d)/, '$1-$2');
+      formatted = raw.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2')
     } else {
-      formatted = raw
-        .replace(/^(\d{2})(\d)/, '($1) $2')
-        .replace(/(\d{5})(\d)/, '$1-$2');
+      formatted = raw.replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2')
     }
 
-    setTelefone(formatted);
-
+    onChange({ ...e, target: { ...e.target, value: formatted } })
     if (raw.length === 10 || raw.length === 11) {
-      setIsValid(true); 
+      setIsValid(true)
     } else {
-      setIsValid(null);
+      setIsValid(null)
     }
-  };
+  }
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="telefone" className="text-sm">
-        Telefone
-      </Label>
+      <Label htmlFor="telefone">Telefone</Label>
       <Input
         id="telefone"
         type="text"
         inputMode="numeric"
         placeholder="(11) 91234-5678"
-        value={telefone}
+        value={value}
         onChange={handleChange}
         maxLength={15}
         required
@@ -187,210 +170,109 @@ export function InputTelefone() {
           isValid === true && "border-green-500 focus-visible:ring-green-500"
         )}
       />
-      {isValid === false && (
-        <p className="text-sm text-red-500">Telefone inválido.</p>
-      )}
-      {isValid === true && (
-        <p className="text-sm text-green-500">Telefone válido.</p>
-      )}
+      {isValid === false && <p className="text-sm text-red-500">Telefone inválido.</p>}
+      {isValid === true && <p className="text-sm text-green-500">Telefone válido.</p>}
     </div>
-  );
+  )
 }
 
-export function InputData() {
-  const [data, setData] = useState('');
-
+export function InputData({ value, onChange }: { value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let raw = e.target.value.replace(/\D/g, '');
-
-    if (raw.length > 8) raw = raw.slice(0, 8);
+    let raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 8) raw = raw.slice(0, 8)
 
     const formatted = raw
       .replace(/^(\d{2})(\d)/, '$1/$2')
       .replace(/(\d{2})(\d)/, '$1/$2')
-      .replace(/(\d{4})$/, '$1');
+      .replace(/(\d{4})$/, '$1')
 
-    setData(formatted);
-  };
+    onChange({ ...e, target: { ...e.target, value: formatted } })
+  }
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="data" className="text-sm">
-        Data de Nascimento
-      </Label>
+      <Label htmlFor="data">Data de Nascimento</Label>
       <Input
         id="data"
         type="text"
         inputMode="numeric"
         placeholder="DD/MM/AAAA"
-        value={data}
+        value={value}
         onChange={handleChange}
         maxLength={10}
         required
         className="text-base"
       />
     </div>
-  );
+  )
 }
 
-export function InputCEP() {
-  const [cep, setCep] = useState('');
-  const [address, setAddress] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export function InputCEP({
+  value,
+  onChange,
+  onAutoFill,
+}: {
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onAutoFill: (address: {
+    logradouro: string
+    bairro: string
+    cidade: string
+    estado: string
+  }) => void
+}) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const fetchAddress = async (cepValue: string) => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await fetch(`https://viacep.com.br/ws/${cepValue}/json/`);
-      const data = await response.json();
+  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let raw = e.target.value.replace(/\D/g, '')
+    if (raw.length > 8) raw = raw.slice(0, 8)
 
-      if (data.erro) {
-        setError('CEP não encontrado.');
-        setAddress('');
-        setNeighborhood('');
-        setCity('');
-        setState('');
-      } else {
-        setAddress(data.logradouro || '');
-        setNeighborhood(data.bairro || '');
-        setCity(data.localidade || '');
-        setState(data.uf || '');
-      }
-    } catch (err) {
-      setError('Erro ao buscar CEP. Tente novamente.');
-      setAddress('');
-      setNeighborhood('');
-      setCity('');
-      setState('');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let raw = e.target.value.replace(/\D/g, '');
-
-    if (raw.length > 8) raw = raw.slice(0, 8);
-
-    const formatted = raw.replace(/^(\d{5})(\d)/, '$1-$2');
-
-    setCep(formatted);
+    const formatted = raw.replace(/^(\d{5})(\d)/, '$1-$2')
+    onChange({ ...e, target: { ...e.target, value: formatted } })
 
     if (raw.length === 8) {
-      fetchAddress(raw);
-    } else {
-      setAddress('');
-      setNeighborhood('');
-      setCity('');
-      setState('');
-      setError('');
+      setLoading(true)
+      setError('')
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${raw}/json/`)
+        const data = await res.json()
+        if (data.erro) {
+          setError('CEP não encontrado.')
+          onAutoFill({ logradouro: '', bairro: '', cidade: '', estado: '' })
+        } else {
+          onAutoFill({
+            logradouro: data.logradouro || '',
+            bairro: data.bairro || '',
+            cidade: data.localidade || '',
+            estado: data.uf || '',
+          })
+        }
+      } catch {
+        setError('Erro ao buscar CEP.')
+        onAutoFill({ logradouro: '', bairro: '', cidade: '', estado: '' })
+      } finally {
+        setLoading(false)
+      }
     }
-  };
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="cep" className="text-sm">
-          CEP
-        </Label>
-        <Input
-          id="cep"
-          type="text"
-          inputMode="numeric"
-          placeholder="00000-000"
-          value={cep}
-          onChange={handleChange}
-          maxLength={9}
-          required
-          className="text-base"
-          disabled={loading}
-        />
-        {loading && <p className="text-sm text-gray-500">Buscando endereço...</p>}
-        {error && <p className="text-sm text-red-500">{error}</p>}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="address" className="text-sm">
-          Endereço
-        </Label>
-        <Input
-          id="address"
-          type="text"
-          placeholder="Rua, Avenida..."
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          required
-          className="text-base"
-          readOnly={loading || !!address} 
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="number" className="text-sm">
-          Número
-        </Label>
-        <Input
-          id="number"
-          type="text"
-          placeholder="123"
-          required
-          className="text-base"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="neighborhood" className="text-sm">
-          Bairro
-        </Label>
-        <Input
-          id="neighborhood"
-          type="text"
-          placeholder="Centro, Jardim..."
-          value={neighborhood}
-          onChange={(e) => setNeighborhood(e.target.value)}
-          required
-          className="text-base"
-          readOnly={loading || !!neighborhood}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="city" className="text-sm">
-          Cidade
-        </Label>
-        <Input
-          id="city"
-          type="text"
-          placeholder="São Paulo, Rio de Janeiro..."
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          required
-          className="text-base"
-          readOnly={loading || !!city}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="state" className="text-sm">
-          Estado (UF)
-        </Label>
-        <Input
-          id="state"
-          type="text"
-          placeholder="SP, RJ..."
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-          maxLength={2}
-          required
-          className="text-base"
-          readOnly={loading || !!state}
-        />
-      </div>
+    <div className="space-y-2">
+      <Label htmlFor="cep">CEP</Label>
+      <Input
+        id="cep"
+        value={value}
+        onChange={handleChange}
+        maxLength={9}
+        placeholder="00000-000"
+        inputMode="numeric"
+        required
+        disabled={loading}
+        className="text-base"
+      />
+      {loading && <p className="text-sm text-muted-foreground">Buscando endereço...</p>}
+      {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
-  );
+  )
 }
