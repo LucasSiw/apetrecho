@@ -7,24 +7,57 @@ interface CartItem extends Product {
   quantity: number
 }
 
+interface Coupon {
+  code: string
+  discount: number
+  type: "percentage" | "fixed"
+  minValue?: number
+}
+
 interface CartContextType {
   cartItems: CartItem[]
   addToCart: (product: Product) => void
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
+  appliedCoupon: Coupon | null
+  applyCoupon: (code: string) => boolean
+  removeCoupon: () => void
+  getSubtotal: () => number
+  getDiscount: () => number
+  getTotal: () => number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
+// Cupons de exemplo
+const availableCoupons: Coupon[] = [
+  { code: "DESCONTO10", discount: 10, type: "percentage" },
+  { code: "FRETE50", discount: 50, type: "fixed" },
+  { code: "PRIMEIRA20", discount: 20, type: "percentage", minValue: 100 },
+  { code: "BLACKFRIDAY", discount: 25, type: "percentage", minValue: 200 },
+]
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
 
   // Carregar carrinho do localStorage ao iniciar
   useEffect(() => {
-    const storedCart = localStorage.getItem("cart")
-    if (storedCart) {
-      setCartItems(JSON.parse(storedCart))
+    try {
+      const storedCart = localStorage.getItem("cart")
+      if (storedCart) {
+        setCartItems(JSON.parse(storedCart))
+      }
+
+      const storedCoupon = localStorage.getItem("appliedCoupon")
+      if (storedCoupon) {
+        setAppliedCoupon(JSON.parse(storedCoupon))
+      }
+    } catch (error) {
+      console.error("Erro ao carregar dados do carrinho:", error)
+      localStorage.removeItem("cart")
+      localStorage.removeItem("appliedCoupon")
     }
   }, [])
 
@@ -32,6 +65,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cartItems))
   }, [cartItems])
+
+  // Salvar cupom no localStorage quando mudar
+  useEffect(() => {
+    if (appliedCoupon) {
+      localStorage.setItem("appliedCoupon", JSON.stringify(appliedCoupon))
+    } else {
+      localStorage.removeItem("appliedCoupon")
+    }
+  }, [appliedCoupon])
 
   const addToCart = (product: Product) => {
     setCartItems((prevItems) => {
@@ -60,10 +102,65 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = () => {
     setCartItems([])
+    setAppliedCoupon(null)
+  }
+
+  const applyCoupon = (code: string): boolean => {
+    const coupon = availableCoupons.find((c) => c.code.toLowerCase() === code.toLowerCase())
+
+    if (!coupon) {
+      return false
+    }
+
+    const subtotal = getSubtotal()
+    if (coupon.minValue && subtotal < coupon.minValue) {
+      return false
+    }
+
+    setAppliedCoupon(coupon)
+    return true
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+  }
+
+  const getSubtotal = () => {
+    return cartItems.reduce((total, item) => total + item.price * item.quantity, 0)
+  }
+
+  const getDiscount = () => {
+    if (!appliedCoupon) return 0
+
+    const subtotal = getSubtotal()
+
+    if (appliedCoupon.type === "percentage") {
+      return (subtotal * appliedCoupon.discount) / 100
+    } else {
+      return Math.min(appliedCoupon.discount, subtotal)
+    }
+  }
+
+  const getTotal = () => {
+    return Math.max(0, getSubtotal() - getDiscount())
   }
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, updateQuantity, clearCart }}>
+    <CartContext.Provider
+      value={{
+        cartItems,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+        appliedCoupon,
+        applyCoupon,
+        removeCoupon,
+        getSubtotal,
+        getDiscount,
+        getTotal,
+      }}
+    >
       {children}
     </CartContext.Provider>
   )

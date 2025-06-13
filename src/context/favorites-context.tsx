@@ -18,9 +18,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   // Carregar favoritos do localStorage ao iniciar
   useEffect(() => {
-    const storedFavorites = localStorage.getItem("favorites")
-    if (storedFavorites) {
-      setFavorites(JSON.parse(storedFavorites))
+    try {
+      const storedFavorites = localStorage.getItem("favorites")
+      if (storedFavorites) {
+        setFavorites(JSON.parse(storedFavorites))
+      }
+    } catch (error) {
+      console.error("Erro ao carregar favoritos do localStorage:", error)
+      localStorage.removeItem("favorites")
     }
   }, [])
 

@@ -7,12 +7,13 @@ import { AuthProvider } from "@/context/auth-context"
 import { CartProvider } from "@/context/cart-context"
 import { FavoritesProvider } from "@/context/favorites-context"
 import { ProductsProvider } from "@/context/products-context"
+import { OrdersProvider } from "@/context/orders-context"
 import { NotificationsProvider } from "@/context/notifications-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Apetrecho",
+  title: "E-Shop - Sua Loja Online",
   description: "E-commerce com os melhores produtos para você",
 }
 
@@ -24,12 +25,14 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <CartProvider>
               <FavoritesProvider>
                 <ProductsProvider>
-                  <NotificationsProvider>{children}</NotificationsProvider>
+                  <OrdersProvider>
+                    <NotificationsProvider>{children}</NotificationsProvider>
+                  </OrdersProvider>
                 </ProductsProvider>
               </FavoritesProvider>
             </CartProvider>

@@ -17,7 +17,7 @@ export async function POST(request) {
     const [rows] = await db.query('SELECT bdChave, bdNome, bdEmail, bdSenha FROM tbClientes WHERE bdEmail = ?', [email]);
 
     if (rows.length === 0) {
-      return new Response(JSON.stringify({ error: 'Email ou senha inválidos.' }), { status: 401 });
+      return new Response(JSON.stringify({ error: 'Email inválido.' }), { status: 401 });
     }
 
     const user = rows[0];
@@ -26,7 +26,7 @@ export async function POST(request) {
     const isPasswordValid = await bcrypt.compare(password, user.bdSenha);
 
     if (!isPasswordValid) {
-      return new Response(JSON.stringify({ error: 'Email ou senha inválidos.' }), { status: 401 });
+      return new Response(JSON.stringify({ error: 'Senha inválida.' }), { status: 401 });
     }
 
     // 3. Se a senha é válida, gerar um token JWT

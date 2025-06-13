@@ -122,24 +122,22 @@ export function ProductForm({ isOpen, onClose, product }: ProductFormProps) {
     setError(null)
 
     try {
-      const productData: Partial<Product> = {
+      const productData: Product = {
+        id: product ? product.id : "",
         name: formData.name,
         description: formData.description,
         price: Number(formData.price),
         image: formData.image,
-        category: formData.category || undefined,
+        category: formData.category || "",
         stock: Number(formData.stock),
         isNew: formData.isNew,
-        brand: formData.brand || undefined,
-      }
-
-      if (formData.originalPrice) {
-        productData.originalPrice = Number(formData.originalPrice)
+        brand: formData.brand || "",
+        originalPrice: formData.originalPrice ? Number(formData.originalPrice) : undefined,
       }
 
       if (product) {
         // Update existing product
-        await updateProduct({ ...productData, id: product.id })
+        await updateProduct(productData)
       } else {
         // Add new product
         await addProduct(productData)

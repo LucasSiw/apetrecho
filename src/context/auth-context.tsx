@@ -1,66 +1,96 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
-interface AuthContextType {
-  user: { id: number; email: string; name: string } | null; // ⭐ Add 'name: string' here ⭐
-  token: string | null;
-  login: (token: string, user: { id: number; email: string; name: string }) => void; // ⭐ Add 'name: string' here ⭐
-  logout: () => void;
+interface User {
+  id: string
+  name: string
+  email: string
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface AuthContextType {
+  user: User | null
+  login: (email: string, password: string) => Promise<void>
+  register: (name: string, email: string, password: string) => Promise<void>
+  logout: () => void
+  loading: boolean
+}
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<{ id: number; email: string; name: string } | null>(null); // ⭐ Add 'name: string' here ⭐
-  const [token, setToken] = useState<string | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Verificar se há um usuário salvo no localStorage ao carregar a página
   useEffect(() => {
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('authUser');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      try {
-
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser.id && parsedUser.email && parsedUser.nome) {
-             setUser({ id: parsedUser.id, email: parsedUser.email, name: parsedUser.nome });
-        } else {
-            console.warn("Stored user data is incomplete, logging out.");
-            logout();
-        }
-      } catch (e) {
-        console.error("Failed to parse stored user", e);
-        logout();
+    try {
+      const storedUser = localStorage.getItem("user")
+      if (storedUser) {
+        setUser(JSON.parse(storedUser))
       }
+    } catch (error) {
+      console.error("Erro ao carregar usuário do localStorage:", error)
+      localStorage.removeItem("user")
+    } finally {
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
-  const login = (newToken: string, newUser: { id: number; email: string; name: string }) => { // ⭐ Add 'name: string' here ⭐
-    localStorage.setItem('authToken', newToken);
-    localStorage.setItem('authUser', JSON.stringify(newUser));
-    setToken(newToken);
-    setUser(newUser);
-  };
+  const login = async (email: string, password: string) => {
+    setLoading(true)
+    try {
+      // Aqui você integrará com Firebase Auth
+      // Por enquanto, simulação para manter o site funcionando
+      const newUser = {
+        id: "user-" + Math.random().toString(36).substr(2, 9),
+        name: email.split("@")[0],
+        email,
+      }
+
+      setUser(newUser)
+      localStorage.setItem("user", JSON.stringify(newUser))
+    } catch (error) {
+      console.error("Erro ao fazer login:", error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const register = async (name: string, email: string, password: string) => {
+    setLoading(true)
+    try {
+      // Aqui você integrará com Firebase Auth
+      // Por enquanto, simulação para manter o site funcionando
+      const newUser = {
+        id: "user-" + Math.random().toString(36).substr(2, 9),
+        name,
+        email,
+      }
+
+      setUser(newUser)
+      localStorage.setItem("user", JSON.stringify(newUser))
+    } catch (error) {
+      console.error("Erro ao registrar:", error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-    setToken(null);
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, token, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    setUser(null)
+    localStorage.removeItem("user")
   }
-  return context;
-};
+
+  return <AuthContext.Provider value={{ user, login, register, logout, loading }}>{children}</AuthContext.Provider>
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+}

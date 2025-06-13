@@ -12,7 +12,6 @@ import { Star, Heart, ShoppingCart, Minus, Plus, Share2, ArrowLeft, Truck, Shiel
 import { useCart } from "@/context/cart-context"
 import { useFavorites } from "@/context/favorites-context"
 import { useProducts } from "@/context/products-context"
-import { enhancedProducts } from "@/context/products-context"
 import { ProductReviews } from "@/components/product-reviews"
 import { RelatedProducts } from "@/components/related-products"
 import { Input } from "@/components/ui/input"
@@ -32,8 +31,7 @@ export default function ProductPage() {
   const productId = params.id as string
 
   useEffect(() => {
-    // Buscar produto nos produtos do sistema e do usuário
-    const allProducts = [...enhancedProducts, ...userProducts]
+    const allProducts = [...userProducts]
     const foundProduct = allProducts.find((p) => p.id === productId)
 
     if (foundProduct) {
@@ -41,7 +39,6 @@ export default function ProductPage() {
     }
     setLoading(false)
   }, [productId, userProducts])
-
   const isFavorite = product ? favorites.some((fav) => fav.id === product.id) : false
 
   const formatPrice = (price: number) => {

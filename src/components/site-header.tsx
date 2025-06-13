@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingCart, HelpCircle, Home, User, LogOut, Menu, X, Package, Heart } from "lucide-react"
+import { ShoppingCart, HelpCircle, Home, User, LogOut, Menu, X, Package, Heart, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
 import { useCart } from "@/context/cart-context"
@@ -9,6 +9,7 @@ import { useFavorites } from "@/context/favorites-context"
 import { useState } from "react"
 import { LoginModal } from "@/components/login-modal"
 import { RegisterModal } from "@/components/register-modal"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
@@ -28,7 +29,7 @@ export function SiteHeader() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <span className="font-bold text-lg sm:text-xl">Apetrecho</span>
+          <span className="font-bold text-lg sm:text-xl">E-Shop</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -65,18 +66,28 @@ export function SiteHeader() {
             Ajuda
           </Link>
           {user && (
-            <Link
-              href="/meus-produtos"
-              className="flex items-center text-sm font-medium transition-colors hover:text-primary"
-            >
-              <Package className="mr-1 h-4 w-4" />
-              Meus Produtos
-            </Link>
+            <>
+              <Link
+                href="/meus-produtos"
+                className="flex items-center text-sm font-medium transition-colors hover:text-primary"
+              >
+                <Package className="mr-1 h-4 w-4" />
+                Meus Produtos
+              </Link>
+              <Link
+                href="/dashboard"
+                className="flex items-center text-sm font-medium transition-colors hover:text-primary"
+              >
+                <BarChart3 className="mr-1 h-4 w-4" />
+                Dashboard
+              </Link>
+            </>
           )}
         </nav>
 
         {/* Desktop User Menu */}
         <div className="hidden md:flex items-center gap-2">
+          <ThemeToggle />
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -101,6 +112,9 @@ export function SiteHeader() {
                   <Link href="/meus-produtos">Meus Produtos</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/favoritos">Favoritos</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout} className="text-red-500">
@@ -118,6 +132,8 @@ export function SiteHeader() {
 
         {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center gap-2">
+          <ThemeToggle />
+
           {/* Cart Icon for Mobile */}
           <Link href="/carrinho" className="relative">
             <Button variant="ghost" size="icon" className="h-9 w-9">
@@ -205,14 +221,24 @@ export function SiteHeader() {
               Ajuda
             </Link>
             {user && (
-              <Link
-                href="/meus-produtos"
-                className="flex items-center py-2 text-sm font-medium transition-colors hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Package className="mr-3 h-4 w-4" />
-                Meus Produtos
-              </Link>
+              <>
+                <Link
+                  href="/meus-produtos"
+                  className="flex items-center py-2 text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Package className="mr-3 h-4 w-4" />
+                  Meus Produtos
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center py-2 text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <BarChart3 className="mr-3 h-4 w-4" />
+                  Dashboard
+                </Link>
+              </>
             )}
 
             <div className="pt-3 border-t">

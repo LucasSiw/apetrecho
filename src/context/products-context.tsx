@@ -1,201 +1,268 @@
-// src/context/products-context.tsx
 "use client"
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import type { Product } from '@/types/product';
-import { useAuth } from './auth-context'; // Import useAuth to get the user's ID
+import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { useAuth } from "@/context/auth-context"
+import type { Product } from "@/types/product"
 
 interface ProductsContextType {
-  products: Product[]; // All products, if you have a public listing
-  userProducts: Product[]; // Products owned by the current user
-  addProduct: (product: Partial<Product>) => Promise<void>;
-  updateProduct: (product: Product) => Promise<void>;
-  deleteProduct: (productId: string) => Promise<void>;
-  fetchUserProducts: () => Promise<void>; // Function to refresh user's products
+  userProducts: Product[]
+  addProduct: (product: Partial<Product>) => Promise<void>
+  updateProduct: (product: Partial<Product> & { id: string }) => Promise<void>
+  deleteProduct: (productId: string) => void
+  getProductById: (productId: string) => Product | undefined
 }
 
-const ProductsContext = createContext<ProductsContextType | undefined>(undefined);
+const ProductsContext = createContext<ProductsContextType | undefined>(undefined)
 
-export const ProductsProvider = ({ children }: { children: ReactNode }) => {
-  const { user, token } = useAuth(); // Get user and token from auth context
-  const [products, setProducts] = useState<Product[]>([]); // All products (optional)
-  const [userProducts, setUserProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+// Dados de exemplo para produtos
+const enhancedProducts: Product[] = [
+  {
+    id: "1",
+    name: "iPhone 15 Pro Max 256GB",
+    description: "O iPhone mais avançado com chip A17 Pro e câmera de 48MP",
+    price: 8999.99,
+    originalPrice: 9999.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "Smartphones",
+    rating: 4.8,
+    reviewCount: 1247,
+    stock: 15,
+    isNew: true,
+    installments: { count: 12, value: 749.99 },
+    brand: "Apple",
+    sku: "IPH15PM256",
+  },
+  {
+    id: "2",
+    name: 'MacBook Air M2 13" 512GB',
+    description: "Notebook ultrafino com chip M2 e tela Liquid Retina",
+    price: 12999.99,
+    originalPrice: 14999.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "Notebooks",
+    rating: 4.9,
+    reviewCount: 892,
+    stock: 8,
+    installments: { count: 12, value: 1083.33 },
+    brand: "Apple",
+    sku: "MBA13M2512",
+  },
+  {
+    id: "3",
+    name: "AirPods Pro 2ª Geração",
+    description: "Fones com cancelamento ativo de ruído e áudio espacial",
+    price: 2299.99,
+    originalPrice: 2799.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "Audio",
+    rating: 4.7,
+    reviewCount: 2156,
+    stock: 25,
+    installments: { count: 10, value: 229.99 },
+    brand: "Apple",
+    sku: "APP2GEN",
+  },
+  {
+    id: "4",
+    name: 'Samsung Smart TV 65" 4K QLED',
+    description: "TV QLED com tecnologia Quantum Dot e Tizen OS",
+    price: 4999.99,
+    originalPrice: 6999.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "TV & Video",
+    rating: 4.6,
+    reviewCount: 543,
+    stock: 3,
+    installments: { count: 12, value: 416.66 },
+    brand: "Samsung",
+    sku: "QLED65Q80C",
+  },
+  {
+    id: "5",
+    name: "Sony Alpha A7 IV Mirrorless",
+    description: "Câmera profissional com sensor full-frame de 33MP",
+    price: 15999.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "Câmeras",
+    rating: 4.9,
+    reviewCount: 234,
+    stock: 5,
+    installments: { count: 12, value: 1333.33 },
+    brand: "Sony",
+    sku: "ILCE7M4",
+  },
+  {
+    id: "6",
+    name: "Apple Watch Series 9 45mm",
+    description: "Smartwatch com GPS, tela Always-On e monitoramento de saúde",
+    price: 3999.99,
+    originalPrice: 4499.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "Smartwatches",
+    rating: 4.8,
+    reviewCount: 1876,
+    stock: 12,
+    isNew: true,
+    installments: { count: 12, value: 333.33 },
+    brand: "Apple",
+    sku: "AWS945MM",
+  },
+  {
+    id: "7",
+    name: "PlayStation 5 Console",
+    description: "Console de nova geração com SSD ultra-rápido",
+    price: 4199.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "Games",
+    rating: 4.7,
+    reviewCount: 3421,
+    stock: 0, // Esgotado
+    installments: { count: 12, value: 349.99 },
+    brand: "Sony",
+    sku: "PS5CONSOLE",
+  },
+  {
+    id: "8",
+    name: "Kindle Oasis 32GB",
+    description: 'E-reader premium com tela de 7" e luz ajustável',
+    price: 1299.99,
+    originalPrice: 1599.99,
+    image: "/placeholder.svg?height=300&width=300",
+    category: "E-readers",
+    rating: 4.5,
+    reviewCount: 892,
+    stock: 18,
+    installments: { count: 10, value: 129.99 },
+    brand: "Amazon",
+    sku: "KOASIS32",
+  },
+]
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"; // Your backend API base URL
+export function ProductsProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  const [userProducts, setUserProducts] = useState<Product[]>([])
 
-  // Function to fetch products owned by the logged-in user
-  const fetchUserProducts = async () => {
-    if (!user || !token) {
-      setUserProducts([]);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      // Assuming your backend has an endpoint like /api/products/my for user-specific products
-      const response = await fetch(`${API_BASE_URL}/products/my`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`, // Send token for authentication
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Erro ao carregar seus produtos: ${response.statusText}`);
-      }
-      const data = await response.json();
-      // ⭐ Map backend data to frontend Product type if necessary ⭐
-      // Example: if backend returns 'bdPrecoAluguel' and frontend expects 'price'
-      const mappedProducts = data.map((item: any) => ({
-        id: item.bdChave, // Map bdChave to id
-        name: item.bdNome,
-        description: item.bdDescricao,
-        category: item.bdCategoria,
-        image: item.bdURLIMG,
-        price: item.bdPrecoAluguel, // Map bdPrecoAluguel to price
-        originalPrice: item.bdPrecoOriginal || undefined, // Assuming a bdPrecoOriginal
-        stock: item.bdEstoque, // Assuming a bdEstoque column
-        brand: item.bdMarca, // Assuming a bdMarca column
-        isNew: item.bdNovo, // Assuming a bdNovo column
-      }));
-
-      setUserProducts(mappedProducts);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro desconhecido ao carregar produtos.");
-      console.error("Fetch user products error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Carregar produtos do localStorage ao iniciar
   useEffect(() => {
-    fetchUserProducts();
-  }, [user, token]); // Re-fetch when user or token changes
-
-  const addProduct = async (productData: Partial<Product>) => {
-    if (!user || !token) {
-      throw new Error("Usuário não autenticado.");
-    }
-    setError(null);
-    try {
-      const payload = {
-        bdChaveCli: user.id, // Pass the user's ID
-        bdNome: productData.name,
-        bdDescricao: productData.description,
-        bdCategoria: productData.category,
-        bdURLIMG: productData.image,
-        bdPrecoAluguel: productData.price, // Map price to bdPrecoAluguel
-        bdPrecoOriginal: productData.originalPrice, // Optional mapping
-        bdEstoque: productData.stock, // Optional mapping
-        bdMarca: productData.brand, // Optional mapping
-        bdNovo: productData.isNew, // Optional mapping
-        // bdEstado and bdAtivo will likely be set by the backend defaults or logic
-      };
-
-      const response = await fetch(`${API_BASE_URL}/products`, { // Your backend API endpoint for adding products
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro ao adicionar produto: ${response.statusText}`);
+    if (user) {
+      const storedProducts = localStorage.getItem(`user_products_${user.id}`)
+      if (storedProducts) {
+        try {
+          setUserProducts(JSON.parse(storedProducts))
+        } catch (error) {
+          console.error("Erro ao carregar produtos do localStorage:", error)
+          setUserProducts([])
+        }
       }
-
-      // After successful addition, refetch user products to update the list
-      await fetchUserProducts();
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao adicionar produto.");
-      console.error("Add product error:", err);
-      throw err; // Re-throw to be caught by ProductForm
+    } else {
+      setUserProducts([])
     }
-  };
+  }, [user])
 
-  const updateProduct = async (productData: Product) => {
-    if (!user || !token) {
-      throw new Error("Usuário não autenticado.");
+  // Salvar produtos no localStorage quando mudar
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem(`user_products_${user.id}`, JSON.stringify(userProducts))
     }
-    setError(null);
-    try {
-      const payload = {
-        bdNome: productData.name,
-        bdDescricao: productData.description,
-        bdCategoria: productData.category,
-        bdURLIMG: productData.image,
-        bdPrecoAluguel: productData.price,
-        bdPrecoOriginal: productData.originalPrice,
-        bdEstoque: productData.stock,
-        bdMarca: productData.brand,
-        bdNovo: productData.isNew,
-      };
+  }, [userProducts, user])
 
-      const response = await fetch(`${API_BASE_URL}/products/${productData.id}`, { // Endpoint for updating
-        method: 'PUT', // Or PATCH
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+  const addProduct = async (productData: Partial<Product>): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!user) {
+          throw new Error("Você precisa estar logado para adicionar produtos")
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro ao atualizar produto: ${response.statusText}`);
+        // Simular um delay de processamento
+        setTimeout(() => {
+          const newProduct: Product = {
+            id: `user-product-${Date.now()}`,
+            name: productData.name || "Produto sem nome",
+            description: productData.description || "Sem descrição",
+            price: productData.price || 0,
+            image: productData.image || "/placeholder.svg?height=300&width=300",
+            category: productData.category,
+            stock: productData.stock || 0,
+            isNew: productData.isNew || false,
+            brand: productData.brand,
+            rating: 0,
+            reviewCount: 0,
+            sku: `SKU-${Date.now().toString(36).toUpperCase()}`,
+            originalPrice: productData.originalPrice,
+            installments: productData.price
+              ? { count: 12, value: Math.round((productData.price / 12) * 100) / 100 }
+              : undefined,
+          }
+
+          setUserProducts((prev) => [...prev, newProduct])
+          resolve()
+        }, 800)
+      } catch (error) {
+        reject(error)
       }
+    })
+  }
 
-      await fetchUserProducts();
+  const updateProduct = async (productData: Partial<Product> & { id: string }): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!user) {
+          throw new Error("Você precisa estar logado para atualizar produtos")
+        }
 
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao atualizar produto.");
-      console.error("Update product error:", err);
-      throw err;
-    }
-  };
-
-  const deleteProduct = async (productId: string) => {
-    if (!user || !token) {
-      throw new Error("Usuário não autenticado.");
-    }
-    setError(null);
-    try {
-      const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Erro ao excluir produto: ${response.statusText}`);
+        // Simular um delay de processamento
+        setTimeout(() => {
+          setUserProducts((prev) =>
+            prev.map((product) =>
+              product.id === productData.id
+                ? {
+                    ...product,
+                    ...productData,
+                    installments: productData.price
+                      ? { count: 12, value: Math.round((productData.price / 12) * 100) / 100 }
+                      : product.installments,
+                  }
+                : product,
+            ),
+          )
+          resolve()
+        }, 800)
+      } catch (error) {
+        reject(error)
       }
+    })
+  }
 
-      await fetchUserProducts();
+  const deleteProduct = (productId: string): void => {
+    setUserProducts((prev) => prev.filter((product) => product.id !== productId))
+  }
 
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erro ao excluir produto.");
-      console.error("Delete product error:", err);
-      throw err;
-    }
-  };
+  const getProductById = (productId: string): Product | undefined => {
+    return userProducts.find((product) => product.id === productId)
+  }
 
   return (
-    <ProductsContext.Provider value={{ products, userProducts, addProduct, updateProduct, deleteProduct, fetchUserProducts }}>
+    <ProductsContext.Provider
+      value={{
+        userProducts,
+        addProduct,
+        updateProduct,
+        deleteProduct,
+        getProductById,
+      }}
+    >
       {children}
     </ProductsContext.Provider>
-  );
-};
+  )
+}
 
-export const useProducts = () => {
-  const context = useContext(ProductsContext);
+export function useProducts() {
+  const context = useContext(ProductsContext)
   if (context === undefined) {
-    throw new Error('useProducts must be used within a ProductsProvider');
+    throw new Error("useProducts must be used within a ProductsProvider")
   }
-  return context;
-};
+  return context
+}
+
+// Exportar os produtos de exemplo para uso em outros componentes
+export { enhancedProducts }
