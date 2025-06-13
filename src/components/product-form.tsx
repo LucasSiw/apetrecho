@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { useProducts } from "@/context/products-context"
 import { useAuth } from "@/context/auth-context"
-import { Loader2, AlertCircle } from "lucide-react"
+import { Loader2, AlertCircle, CheckCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { Product } from "@/types/product"
 
@@ -34,6 +34,7 @@ const categories = [
   "Beleza",
   "Livros",
   "Brinquedos",
+  "Ferramentas",
   "Outros",
 ]
 
@@ -41,7 +42,7 @@ export function ProductForm({ isOpen, onClose, product }: ProductFormProps) {
   const { user } = useAuth()
   const { addProduct, updateProduct } = useProducts()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -81,7 +82,7 @@ export function ProductForm({ isOpen, onClose, product }: ProductFormProps) {
         isNew: true,
       })
     }
-    setError(null)
+    setMessage(null)
   }, [product, isOpen])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -114,38 +115,51 @@ export function ProductForm({ isOpen, onClose, product }: ProductFormProps) {
 
     const validationError = validateForm()
     if (validationError) {
-      setError(validationError)
+      setMessage({ type: "error", text: validationError })
       return
     }
 
     setIsSubmitting(true)
-    setError(null)
+    setMessage(null)
 
     try {
-      const productData: Product = {
-        id: product ? product.id : "",
+      const productData: Partial<Product> = {
         name: formData.name,
         description: formData.description,
         price: Number(formData.price),
         image: formData.image,
-        category: formData.category || "",
+        category: formData.category || undefined,
         stock: Number(formData.stock),
         isNew: formData.isNew,
-        brand: formData.brand || "",
-        originalPrice: formData.originalPrice ? Number(formData.originalPrice) : undefined,
+        brand: formData.brand || undefined,
       }
 
+      if (formData.originalPrice) {
+        productData.originalPrice = Number(formData.originalPrice)
+      }
+
+      let result
       if (product) {
         // Update existing product
-        await updateProduct(productData)
+        result = await updateProduct({ ...productData, id: product.id })
       } else {
         // Add new product
-        await addProduct(productData)
+        result = await addProduct(productData)
       }
 
-      onClose()
+      if (result.success) {
+        setMessage({ type: "success", text: result.message })
+        setTimeout(() => {
+          onClose()
+        }, 1500)
+      } else {
+        setMessage({ type: "error", text: result.message })
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ocorreu um erro ao salvar o produto")
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Ocorreu um erro ao salvar o produto",
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -158,10 +172,10 @@ export function ProductForm({ isOpen, onClose, product }: ProductFormProps) {
           <DialogTitle>{product ? "Editar Produto" : "Adicionar Novo Produto"}</DialogTitle>
         </DialogHeader>
 
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+        {message && (
+          <Alert variant={message.type === "error" ? "destructive" : "default"} className="mb-4">
+            {message.type === "error" ? <AlertCircle className="h-4 w-4" /> : <CheckCircle className="h-4 w-4" />}
+            <AlertDescription>{message.text}</AlertDescription>
           </Alert>
         )}
 

@@ -2,19 +2,22 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useAuth } from "@/context/auth-context"
+import { createProduct, updateProduct, deleteProduct, getUserProducts } from "@/lib/products"
 import type { Product } from "@/types/product"
 
 interface ProductsContextType {
   userProducts: Product[]
-  addProduct: (product: Partial<Product>) => Promise<void>
-  updateProduct: (product: Partial<Product> & { id: string }) => Promise<void>
-  deleteProduct: (productId: string) => void
+  loading: boolean
+  addProduct: (product: Partial<Product>) => Promise<{ success: boolean; message: string }>
+  updateProduct: (product: Partial<Product> & { id: string }) => Promise<{ success: boolean; message: string }>
+  deleteProduct: (productId: string) => Promise<{ success: boolean; message: string }>
   getProductById: (productId: string) => Product | undefined
+  refreshProducts: () => Promise<void>
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined)
 
-// Dados de exemplo para produtos
+// Dados de exemplo para produtos (mantidos para exibição geral)
 const enhancedProducts: Product[] = [
   {
     id: "1",
@@ -141,114 +144,146 @@ const enhancedProducts: Product[] = [
 export function ProductsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [userProducts, setUserProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // Carregar produtos do localStorage ao iniciar
-  useEffect(() => {
-    if (user) {
-      const storedProducts = localStorage.getItem(`user_products_${user.id}`)
-      if (storedProducts) {
-        try {
-          setUserProducts(JSON.parse(storedProducts))
-        } catch (error) {
-          console.error("Erro ao carregar produtos do localStorage:", error)
-          setUserProducts([])
-        }
-      }
-    } else {
+  // Carregar produtos do banco de dados
+  const loadUserProducts = async () => {
+    if (!user) {
       setUserProducts([])
+      return
     }
+
+    setLoading(true)
+    try {
+      const products = await getUserProducts(user.id)
+      setUserProducts(products)
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error)
+      setUserProducts([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadUserProducts()
   }, [user])
 
-  // Salvar produtos no localStorage quando mudar
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(`user_products_${user.id}`, JSON.stringify(userProducts))
+  const addProduct = async (productData: Partial<Product>) => {
+    if (!user) {
+      return {
+        success: false,
+        message: "Você precisa estar logado para adicionar produtos",
+      }
     }
-  }, [userProducts, user])
 
-  const addProduct = async (productData: Partial<Product>): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      try {
-        if (!user) {
-          throw new Error("Você precisa estar logado para adicionar produtos")
-        }
+    try {
+      const result = await createProduct({
+        name: productData.name || "Produto sem nome",
+        description: productData.description || "Sem descrição",
+        price: productData.price || 0,
+        originalPrice: productData.originalPrice,
+        category: productData.category,
+        stock: productData.stock || 0,
+        image: productData.image || "/placeholder.svg?height=300&width=300",
+        brand: productData.brand,
+        isNew: productData.isNew || false,
+        userId: user.id,
+      })
 
-        // Simular um delay de processamento
-        setTimeout(() => {
-          const newProduct: Product = {
-            id: `user-product-${Date.now()}`,
-            name: productData.name || "Produto sem nome",
-            description: productData.description || "Sem descrição",
-            price: productData.price || 0,
-            image: productData.image || "/placeholder.svg?height=300&width=300",
-            category: productData.category,
-            stock: productData.stock || 0,
-            isNew: productData.isNew || false,
-            brand: productData.brand,
-            rating: 0,
-            reviewCount: 0,
-            sku: `SKU-${Date.now().toString(36).toUpperCase()}`,
-            originalPrice: productData.originalPrice,
-            installments: productData.price
-              ? { count: 12, value: Math.round((productData.price / 12) * 100) / 100 }
-              : undefined,
-          }
-
-          setUserProducts((prev) => [...prev, newProduct])
-          resolve()
-        }, 800)
-      } catch (error) {
-        reject(error)
+      if (result.success) {
+        await loadUserProducts() // Recarregar produtos
       }
-    })
-  }
 
-  const updateProduct = async (productData: Partial<Product> & { id: string }): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      try {
-        if (!user) {
-          throw new Error("Você precisa estar logado para atualizar produtos")
-        }
-
-        // Simular um delay de processamento
-        setTimeout(() => {
-          setUserProducts((prev) =>
-            prev.map((product) =>
-              product.id === productData.id
-                ? {
-                    ...product,
-                    ...productData,
-                    installments: productData.price
-                      ? { count: 12, value: Math.round((productData.price / 12) * 100) / 100 }
-                      : product.installments,
-                  }
-                : product,
-            ),
-          )
-          resolve()
-        }, 800)
-      } catch (error) {
-        reject(error)
+      return result
+    } catch (error) {
+      console.error("Erro ao adicionar produto:", error)
+      return {
+        success: false,
+        message: "Erro ao adicionar produto. Tente novamente.",
       }
-    })
+    }
   }
 
-  const deleteProduct = (productId: string): void => {
-    setUserProducts((prev) => prev.filter((product) => product.id !== productId))
+  const updateProductHandler = async (productData: Partial<Product> & { id: string }) => {
+    if (!user) {
+      return {
+        success: false,
+        message: "Você precisa estar logado para atualizar produtos",
+      }
+    }
+
+    try {
+      const result = await updateProduct(productData.id, {
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        originalPrice: productData.originalPrice,
+        category: productData.category,
+        stock: productData.stock,
+        image: productData.image,
+        brand: productData.brand,
+        isNew: productData.isNew,
+        userId: user.id,
+      })
+
+      if (result.success) {
+        await loadUserProducts() // Recarregar produtos
+      }
+
+      return result
+    } catch (error) {
+      console.error("Erro ao atualizar produto:", error)
+      return {
+        success: false,
+        message: "Erro ao atualizar produto. Tente novamente.",
+      }
+    }
   }
 
-  const getProductById = (productId: string): Product | undefined => {
+  const deleteProductHandler = async (productId: string) => {
+    if (!user) {
+      return {
+        success: false,
+        message: "Você precisa estar logado para excluir produtos",
+      }
+    }
+
+    try {
+      const result = await deleteProduct(productId, user.id)
+
+      if (result.success) {
+        await loadUserProducts() // Recarregar produtos
+      }
+
+      return result
+    } catch (error) {
+      console.error("Erro ao excluir produto:", error)
+      return {
+        success: false,
+        message: "Erro ao excluir produto. Tente novamente.",
+      }
+    }
+  }
+
+  const getProductByIdHandler = (productId: string): Product | undefined => {
     return userProducts.find((product) => product.id === productId)
+  }
+
+  const refreshProducts = async () => {
+    await loadUserProducts()
   }
 
   return (
     <ProductsContext.Provider
       value={{
         userProducts,
+        loading,
         addProduct,
-        updateProduct,
-        deleteProduct,
-        getProductById,
+        updateProduct: updateProductHandler,
+        deleteProduct: deleteProductHandler,
+        getProductById: getProductByIdHandler,
+        refreshProducts,
       }}
     >
       {children}

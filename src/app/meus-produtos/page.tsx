@@ -5,22 +5,25 @@ import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Edit, Trash2, Package } from "lucide-react"
+import { Plus, Edit, Trash2, Package, Loader2 } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 import { useProducts } from "@/context/products-context"
 import { ProductForm } from "@/components/product-form"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useToast } from "@/app/hooks/use-toast"
 import type { Product } from "@/types/product"
 
 export default function MeusProdutosPage() {
   const { user } = useAuth()
-  const { userProducts, deleteProduct } = useProducts()
+  const { userProducts, loading, deleteProduct } = useProducts()
   const [showForm, setShowForm] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!user) {
@@ -33,9 +36,32 @@ export default function MeusProdutosPage() {
     setShowForm(true)
   }
 
-  const handleDelete = (productId: string) => {
-    deleteProduct(productId)
-    setDeleteConfirmation(null)
+  const handleDelete = async (productId: string) => {
+    setIsDeleting(true)
+    try {
+      const result = await deleteProduct(productId)
+      if (result.success) {
+        toast({
+          title: "Sucesso",
+          description: result.message,
+        })
+      } else {
+        toast({
+          title: "Erro",
+          description: result.message,
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir produto. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeleteConfirmation(null)
+    }
   }
 
   const formatPrice = (price: number) => {
@@ -69,7 +95,12 @@ export default function MeusProdutosPage() {
           </Button>
         </div>
 
-        {userProducts.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Carregando produtos...</span>
+          </div>
+        ) : userProducts.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
@@ -151,11 +182,25 @@ export default function MeusProdutosPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end gap-4 mt-4">
-              <Button variant="outline" onClick={() => setDeleteConfirmation(null)}>
+              <Button variant="outline" onClick={() => setDeleteConfirmation(null)} disabled={isDeleting}>
                 Cancelar
               </Button>
-              <Button variant="destructive" onClick={() => deleteConfirmation && handleDelete(deleteConfirmation)}>
-                <Trash2 className="mr-2 h-4 w-4" /> Excluir
+              <Button
+                variant="destructive"
+                onClick={() => deleteConfirmation && handleDelete(deleteConfirmation)}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Excluir
+                  </>
+                )}
               </Button>
             </div>
           </DialogContent>
