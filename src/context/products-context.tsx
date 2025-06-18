@@ -1,175 +1,134 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
-import { useAuth } from "@/context/auth-context"
-import { createProduct, updateProduct, deleteProduct, getUserProducts } from "@/lib/actions/products"
+import type React from "react"
+import { createContext, useContext, useState, useEffect } from "react"
 import type { Product } from "@/types/product"
+import {
+  getAllProducts,
+  getFeaturedProducts,
+  getUserProducts,
+  createProduct as createProductAction,
+  updateProduct as updateProductAction,
+  deleteProduct as deleteProductAction,
+  searchProducts as searchProductsAction,
+} from "@/lib/actions/products"
+import { useAuth } from "@/context/auth-context"
+import { useToast } from "@/app/hooks/use-toast"
+
+export interface ProductInput {
+  name: string
+  description: string
+  price: number
+  originalPrice?: number
+  category?: string
+  stock: number
+  image: string
+  brand?: string
+  isNew: boolean
+}
 
 interface ProductsContextType {
+  // Produtos gerais
+  allProducts: Product[]
+  featuredProducts: Product[]
+
+  // Produtos do usuário
   userProducts: Product[]
+
+  // Estados
   loading: boolean
-  addProduct: (product: Partial<Product>) => Promise<{ success: boolean; message: string }>
-  updateProduct: (product: Partial<Product> & { id: string }) => Promise<{ success: boolean; message: string }>
+  error: string | null
+
+  // Funções CRUD
+  addProduct: (product: ProductInput) => Promise<{ success: boolean; message: string }>
+  updateProduct: (productId: string, product: Partial<ProductInput>) => Promise<{ success: boolean; message: string }>
   deleteProduct: (productId: string) => Promise<{ success: boolean; message: string }>
-  getProductById: (productId: string) => Product | undefined
+
+  // Funções de busca e refresh
   refreshProducts: () => Promise<void>
+  refreshUserProducts: () => Promise<void>
+  searchProducts: (query: string, category?: string) => Promise<Product[]>
+  getProductById: (productId: string) => Product | undefined
 }
 
 const ProductsContext = createContext<ProductsContextType | undefined>(undefined)
 
-// Dados de exemplo para produtos (mantidos para exibição geral)
-const enhancedProducts: Product[] = [
-  {
-    id: "1",
-    name: "iPhone 15 Pro Max 256GB",
-    description: "O iPhone mais avançado com chip A17 Pro e câmera de 48MP",
-    price: 8999.99,
-    originalPrice: 9999.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "Smartphones",
-    rating: 4.8,
-    reviewCount: 1247,
-    stock: 15,
-    isNew: true,
-    installments: { count: 12, value: 749.99 },
-    brand: "Apple",
-    sku: "IPH15PM256",
-  },
-  {
-    id: "2",
-    name: 'MacBook Air M2 13" 512GB',
-    description: "Notebook ultrafino com chip M2 e tela Liquid Retina",
-    price: 12999.99,
-    originalPrice: 14999.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "Notebooks",
-    rating: 4.9,
-    reviewCount: 892,
-    stock: 8,
-    installments: { count: 12, value: 1083.33 },
-    brand: "Apple",
-    sku: "MBA13M2512",
-  },
-  {
-    id: "3",
-    name: "AirPods Pro 2ª Geração",
-    description: "Fones com cancelamento ativo de ruído e áudio espacial",
-    price: 2299.99,
-    originalPrice: 2799.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "Audio",
-    rating: 4.7,
-    reviewCount: 2156,
-    stock: 25,
-    installments: { count: 10, value: 229.99 },
-    brand: "Apple",
-    sku: "APP2GEN",
-  },
-  {
-    id: "4",
-    name: 'Samsung Smart TV 65" 4K QLED',
-    description: "TV QLED com tecnologia Quantum Dot e Tizen OS",
-    price: 4999.99,
-    originalPrice: 6999.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "TV & Video",
-    rating: 4.6,
-    reviewCount: 543,
-    stock: 3,
-    installments: { count: 12, value: 416.66 },
-    brand: "Samsung",
-    sku: "QLED65Q80C",
-  },
-  {
-    id: "5",
-    name: "Sony Alpha A7 IV Mirrorless",
-    description: "Câmera profissional com sensor full-frame de 33MP",
-    price: 15999.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "Câmeras",
-    rating: 4.9,
-    reviewCount: 234,
-    stock: 5,
-    installments: { count: 12, value: 1333.33 },
-    brand: "Sony",
-    sku: "ILCE7M4",
-  },
-  {
-    id: "6",
-    name: "Apple Watch Series 9 45mm",
-    description: "Smartwatch com GPS, tela Always-On e monitoramento de saúde",
-    price: 3999.99,
-    originalPrice: 4499.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "Smartwatches",
-    rating: 4.8,
-    reviewCount: 1876,
-    stock: 12,
-    isNew: true,
-    installments: { count: 12, value: 333.33 },
-    brand: "Apple",
-    sku: "AWS945MM",
-  },
-  {
-    id: "7",
-    name: "PlayStation 5 Console",
-    description: "Console de nova geração com SSD ultra-rápido",
-    price: 4199.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "Games",
-    rating: 4.7,
-    reviewCount: 3421,
-    stock: 0, // Esgotado
-    installments: { count: 12, value: 349.99 },
-    brand: "Sony",
-    sku: "PS5CONSOLE",
-  },
-  {
-    id: "8",
-    name: "Kindle Oasis 32GB",
-    description: 'E-reader premium com tela de 7" e luz ajustável',
-    price: 1299.99,
-    originalPrice: 1599.99,
-    image: "/placeholder.svg?height=300&width=300",
-    category: "E-readers",
-    rating: 4.5,
-    reviewCount: 892,
-    stock: 18,
-    installments: { count: 10, value: 129.99 },
-    brand: "Amazon",
-    sku: "KOASIS32",
-  },
-]
-
-export function ProductsProvider({ children }: { children: ReactNode }) {
+export function ProductsProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
-  const [userProducts, setUserProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
 
-  // Carregar produtos do banco de dados
+  // Estados
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [userProducts, setUserProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Carregar todos os produtos
+  const loadAllProducts = async () => {
+    try {
+      console.log("🔄 Carregando todos os produtos...")
+      const products = await getAllProducts()
+      console.log("✅ Produtos carregados:", products.length)
+      setAllProducts(products)
+    } catch (err) {
+      console.error("❌ Erro ao carregar produtos:", err)
+      setError(err instanceof Error ? err.message : "Erro ao carregar produtos")
+    }
+  }
+
+  // Carregar produtos em destaque
+  const loadFeaturedProducts = async () => {
+    try {
+      console.log("🔄 Carregando produtos em destaque...")
+      const products = await getFeaturedProducts()
+      console.log("✅ Produtos em destaque carregados:", products.length)
+      setFeaturedProducts(products)
+    } catch (err) {
+      console.error("❌ Erro ao carregar produtos em destaque:", err)
+    }
+  }
+
+  // Carregar produtos do usuário
   const loadUserProducts = async () => {
     if (!user) {
       setUserProducts([])
       return
     }
 
-    setLoading(true)
     try {
+      console.log("🔄 Carregando produtos do usuário:", user.id)
       const products = await getUserProducts(user.id)
+      console.log("✅ Produtos do usuário carregados:", products.length)
       setUserProducts(products)
-    } catch (error) {
-      console.error("Erro ao carregar produtos:", error)
+    } catch (err) {
+      console.error("❌ Erro ao carregar produtos do usuário:", err)
       setUserProducts([])
+    }
+  }
+
+  // Carregar todos os dados
+  const loadProducts = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      await Promise.all([loadAllProducts(), loadFeaturedProducts(), loadUserProducts()])
+    } catch (err) {
+      console.error("❌ Erro geral ao carregar produtos:", err)
+      setError(err instanceof Error ? err.message : "Erro desconhecido")
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os produtos",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => {
-    loadUserProducts()
-  }, [user])
-
-  const addProduct = async (productData: Partial<Product>) => {
+  // Adicionar produto
+  const addProduct = async (productData: ProductInput): Promise<{ success: boolean; message: string }> => {
     if (!user) {
       return {
         success: false,
@@ -178,21 +137,19 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const result = await createProduct({
-        name: productData.name || "Produto sem nome",
-        description: productData.description || "Sem descrição",
-        price: productData.price || 0,
-        originalPrice: productData.originalPrice,
-        category: productData.category,
-        stock: productData.stock || 0,
-        image: productData.image || "/placeholder.svg?height=300&width=300",
-        brand: productData.brand,
-        isNew: productData.isNew || false,
+      const result = await createProductAction({
+        ...productData,
         userId: user.id,
       })
 
       if (result.success) {
-        await loadUserProducts() // Recarregar produtos
+        // Recarregar produtos após adicionar
+        await Promise.all([loadAllProducts(), loadFeaturedProducts(), loadUserProducts()])
+
+        toast({
+          title: "Sucesso",
+          description: result.message,
+        })
       }
 
       return result
@@ -205,7 +162,11 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const updateProductHandler = async (productData: Partial<Product> & { id: string }) => {
+  // Atualizar produto
+  const updateProduct = async (
+    productId: string,
+    productData: Partial<ProductInput>,
+  ): Promise<{ success: boolean; message: string }> => {
     if (!user) {
       return {
         success: false,
@@ -214,21 +175,19 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const result = await updateProduct(productData.id, {
-        name: productData.name,
-        description: productData.description,
-        price: productData.price,
-        originalPrice: productData.originalPrice,
-        category: productData.category,
-        stock: productData.stock,
-        image: productData.image,
-        brand: productData.brand,
-        isNew: productData.isNew,
+      const result = await updateProductAction(productId, {
+        ...productData,
         userId: user.id,
       })
 
       if (result.success) {
-        await loadUserProducts() // Recarregar produtos
+        // Recarregar produtos após atualizar
+        await Promise.all([loadAllProducts(), loadFeaturedProducts(), loadUserProducts()])
+
+        toast({
+          title: "Sucesso",
+          description: result.message,
+        })
       }
 
       return result
@@ -241,7 +200,8 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const deleteProductHandler = async (productId: string) => {
+  // Excluir produto
+  const deleteProduct = async (productId: string): Promise<{ success: boolean; message: string }> => {
     if (!user) {
       return {
         success: false,
@@ -250,10 +210,16 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const result = await deleteProduct(productId, user.id)
+      const result = await deleteProductAction(productId, user.id)
 
       if (result.success) {
-        await loadUserProducts() // Recarregar produtos
+        // Recarregar produtos após excluir
+        await Promise.all([loadAllProducts(), loadFeaturedProducts(), loadUserProducts()])
+
+        toast({
+          title: "Sucesso",
+          description: result.message,
+        })
       }
 
       return result
@@ -266,29 +232,67 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const getProductByIdHandler = (productId: string): Product | undefined => {
-    return userProducts.find((product) => product.id === productId)
+  // Buscar produtos
+  const searchProducts = async (query: string, category?: string): Promise<Product[]> => {
+    try {
+      return await searchProductsAction(query, category)
+    } catch (error) {
+      console.error("Erro ao buscar produtos:", error)
+      return []
+    }
   }
 
+  // Buscar produto por ID
+  const getProductById = (productId: string): Product | undefined => {
+    // Buscar primeiro nos produtos do usuário, depois em todos os produtos
+    return (
+      userProducts.find((product) => product.id === productId) ||
+      allProducts.find((product) => product.id === productId)
+    )
+  }
+
+  // Refresh functions
   const refreshProducts = async () => {
+    await loadAllProducts()
+    await loadFeaturedProducts()
+  }
+
+  const refreshUserProducts = async () => {
     await loadUserProducts()
   }
 
-  return (
-    <ProductsContext.Provider
-      value={{
-        userProducts,
-        loading,
-        addProduct,
-        updateProduct: updateProductHandler,
-        deleteProduct: deleteProductHandler,
-        getProductById: getProductByIdHandler,
-        refreshProducts,
-      }}
-    >
-      {children}
-    </ProductsContext.Provider>
-  )
+  // Effects
+  useEffect(() => {
+    loadProducts()
+  }, [])
+
+  useEffect(() => {
+    loadUserProducts()
+  }, [user])
+
+  const value: ProductsContextType = {
+    // Produtos
+    allProducts,
+    featuredProducts,
+    userProducts,
+
+    // Estados
+    loading,
+    error,
+
+    // Funções CRUD
+    addProduct,
+    updateProduct,
+    deleteProduct,
+
+    // Funções de busca e refresh
+    refreshProducts,
+    refreshUserProducts,
+    searchProducts,
+    getProductById,
+  }
+
+  return <ProductsContext.Provider value={value}>{children}</ProductsContext.Provider>
 }
 
 export function useProducts() {
@@ -298,6 +302,3 @@ export function useProducts() {
   }
   return context
 }
-
-// Exportar os produtos de exemplo para uso em outros componentes
-export { enhancedProducts }

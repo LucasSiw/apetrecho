@@ -23,21 +23,25 @@ export async function createProduct(data: ProductInput) {
   try {
     console.log("Criando produto com dados:", data)
 
-    const product = await prisma.tbferramentas.create({
+    const product = await prisma.tbFerramentas.create({
       data: {
         bdNome: data.name,
         bdDescricao: data.description,
         bdCategoria: data.category || "Geral",
         bdURLIMG: data.image,
         bdPrecoAluguel: new Decimal(data.price.toString()),
-        bdChaveCli: Number.parseInt(data.userId) || 1,
-        bdEstado: "dispon_vel",
+        bdChaveCli: Number.parseInt(data.userId),
+        bdEstado: data.stock > 0 ? "disponível" : "manutenção",
         bdAtivo: true,
+        bdDTCADASTRO: new Date(),
       },
     })
 
+    console.log("Produto criado no banco:", product)
+
     revalidatePath("/meus-produtos")
     revalidatePath("/dashboard")
+    revalidatePath("/")
 
     return {
       success: true,
@@ -55,6 +59,8 @@ export async function createProduct(data: ProductInput) {
 
 export async function updateProduct(productId: string, data: Partial<ProductInput>) {
   try {
+    console.log("Atualizando produto:", productId, "com dados:", data)
+
     const updateData: any = {}
 
     if (data.name !== undefined) updateData.bdNome = data.name
@@ -62,14 +68,18 @@ export async function updateProduct(productId: string, data: Partial<ProductInpu
     if (data.price !== undefined) updateData.bdPrecoAluguel = new Decimal(data.price.toString())
     if (data.category !== undefined) updateData.bdCategoria = data.category
     if (data.image !== undefined) updateData.bdURLIMG = data.image
+    if (data.stock !== undefined) updateData.bdEstado = data.stock > 0 ? "disponível" : "manutenção"
 
-    await prisma.tbferramentas.update({
+    const updatedProduct = await prisma.tbFerramentas.update({
       where: { bdChave: BigInt(productId) },
       data: updateData,
     })
 
+    console.log("Produto atualizado:", updatedProduct)
+
     revalidatePath("/meus-produtos")
     revalidatePath("/dashboard")
+    revalidatePath("/")
 
     return {
       success: true,
@@ -86,7 +96,9 @@ export async function updateProduct(productId: string, data: Partial<ProductInpu
 
 export async function deleteProduct(productId: string, userId: string) {
   try {
-    await prisma.tbferramentas.update({
+    console.log("Excluindo produto:", productId, "do usuário:", userId)
+
+    const deletedProduct = await prisma.tbFerramentas.update({
       where: {
         bdChave: BigInt(productId),
         bdChaveCli: Number.parseInt(userId),
@@ -96,8 +108,11 @@ export async function deleteProduct(productId: string, userId: string) {
       },
     })
 
+    console.log("Produto excluído:", deletedProduct)
+
     revalidatePath("/meus-produtos")
     revalidatePath("/dashboard")
+    revalidatePath("/")
 
     return {
       success: true,
@@ -114,7 +129,9 @@ export async function deleteProduct(productId: string, userId: string) {
 
 export async function getUserProducts(userId: string): Promise<Product[]> {
   try {
-    const products = await prisma.tbferramentas.findMany({
+    console.log("Buscando produtos do usuário:", userId)
+
+    const products = await prisma.tbFerramentas.findMany({
       where: {
         bdChaveCli: Number.parseInt(userId),
         bdAtivo: true,
@@ -122,7 +139,18 @@ export async function getUserProducts(userId: string): Promise<Product[]> {
       orderBy: { bdDTCADASTRO: "desc" },
     })
 
-    return products.map((product: PrismaProduct) => convertPrismaProductToProduct(product as PrismaProduct))
+    console.log("Produtos encontrados no banco:", products.length)
+    console.log("Primeiro produto (se existir):", products[0])
+
+    const convertedProducts = products.map((product: PrismaProduct) => {
+      const converted = convertPrismaProductToProduct(product as PrismaProduct)
+      console.log("Produto convertido:", converted)
+      return converted
+    })
+
+    console.log("Produtos convertidos:", convertedProducts.length)
+
+    return convertedProducts
   } catch (error) {
     console.error("Erro ao buscar produtos do usuário:", error)
     return []
@@ -131,15 +159,24 @@ export async function getUserProducts(userId: string): Promise<Product[]> {
 
 export async function getProductById(productId: string): Promise<Product | null> {
   try {
-    const product = await prisma.tbferramentas.findUnique({
+    console.log("Buscando produto por ID:", productId)
+
+    const product = await prisma.tbFerramentas.findUnique({
       where: { bdChave: BigInt(productId) },
+      include: {
+        cliente: true, // Incluir dados do cliente/proprietário
+      },
     })
 
     if (!product || !product.bdAtivo) {
+      console.log("Produto não encontrado ou inativo")
       return null
     }
 
-    return convertPrismaProductToProduct(product as PrismaProduct)
+    const converted = convertPrismaProductToProduct(product as PrismaProduct)
+    console.log("Produto encontrado e convertido:", converted)
+
+    return converted
   } catch (error) {
     console.error("Erro ao buscar produto:", error)
     return null
@@ -148,13 +185,20 @@ export async function getProductById(productId: string): Promise<Product | null>
 
 export async function getAllProducts(): Promise<Product[]> {
   try {
-    const products = await prisma.tbferramentas.findMany({
+    console.log("Buscando todos os produtos disponíveis")
+
+    const products = await prisma.tbFerramentas.findMany({
       where: {
         bdAtivo: true,
-        bdEstado: "dispon_vel",
+        bdEstado: "disponível",
+      },
+      include: {
+        cliente: true, // Incluir dados do proprietário
       },
       orderBy: { bdDTCADASTRO: "desc" },
     })
+
+    console.log("Todos os produtos encontrados:", products.length)
 
     return products.map((product: PrismaProduct) => convertPrismaProductToProduct(product as PrismaProduct))
   } catch (error) {
@@ -165,9 +209,11 @@ export async function getAllProducts(): Promise<Product[]> {
 
 export async function searchProducts(searchTerm: string, category?: string): Promise<Product[]> {
   try {
+    console.log("Buscando produtos com termo:", searchTerm, "categoria:", category)
+
     const whereCondition: any = {
       bdAtivo: true,
-      bdEstado: "dispon_vel",
+      bdEstado: "disponível",
     }
 
     if (searchTerm) {
@@ -181,10 +227,15 @@ export async function searchProducts(searchTerm: string, category?: string): Pro
       whereCondition.bdCategoria = category
     }
 
-    const products = await prisma.tbferramentas.findMany({
+    const products = await prisma.tbFerramentas.findMany({
       where: whereCondition,
+      include: {
+        cliente: true,
+      },
       orderBy: { bdDTCADASTRO: "desc" },
     })
+
+    console.log("Produtos encontrados na busca:", products.length)
 
     return products.map((product: PrismaProduct) => convertPrismaProductToProduct(product as PrismaProduct))
   } catch (error) {
@@ -193,34 +244,23 @@ export async function searchProducts(searchTerm: string, category?: string): Pro
   }
 }
 
-export async function getProductsByCategory(category: string): Promise<Product[]> {
-  try {
-    const products = await prisma.tbferramentas.findMany({
-      where: {
-        bdCategoria: category,
-        bdAtivo: true,
-        bdEstado: "dispon_vel",
-      },
-      orderBy: { bdDTCADASTRO: "desc" },
-    })
-
-    return products.map((product: PrismaProduct) => convertPrismaProductToProduct(product as PrismaProduct))
-  } catch (error) {
-    console.error("Erro ao buscar produtos por categoria:", error)
-    return []
-  }
-}
-
 export async function getFeaturedProducts(): Promise<Product[]> {
   try {
-    const products = await prisma.tbferramentas.findMany({
+    console.log("Buscando produtos em destaque")
+
+    const products = await prisma.tbFerramentas.findMany({
       where: {
         bdAtivo: true,
-        bdEstado: "dispon_vel",
+        bdEstado: "disponível",
+      },
+      include: {
+        cliente: true,
       },
       orderBy: { bdDTCADASTRO: "desc" },
       take: 8,
     })
+
+    console.log("Produtos em destaque encontrados:", products.length)
 
     return products.map((product: PrismaProduct) => {
       const converted = convertPrismaProductToProduct(product as PrismaProduct)
@@ -235,95 +275,72 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   }
 }
 
-// Funções específicas para o sistema de aluguel
-export async function createRental(clientId: number, toolId: string, totalValue: number) {
+// Função para testar a conexão com o banco
+export async function testDatabaseConnection() {
   try {
-    const rental = await prisma.tbalugueis.create({
-      data: {
-        bdChaveCli: clientId,
-        bdChaveFer: Number.parseInt(toolId),
-        bdVlrTotal: new Decimal(totalValue.toString()),
-        bdStatus: "ativo",
-      },
-    })
+    console.log("Testando conexão com o banco de dados...")
 
-    // Atualizar status da ferramenta para alugada
-    await prisma.tbferramentas.update({
-      where: { bdChave: BigInt(toolId) },
-      data: { bdEstado: "alugada" },
-    })
-
-    return {
-      success: true,
-      rentalId: rental.bdChave.toString(),
-      message: "Aluguel criado com sucesso!",
-    }
-  } catch (error) {
-    console.error("Erro ao criar aluguel:", error)
-    return {
-      success: false,
-      message: "Erro ao criar aluguel. Tente novamente.",
-    }
-  }
-}
-
-export async function finishRental(rentalId: string) {
-  try {
-    const rental = await prisma.tbalugueis.update({
-      where: { bdChave: BigInt(rentalId) },
-      data: {
-        bdStatus: "finalizado",
-        bdDTFIM: new Date(),
-      },
-    })
-
-    // Retornar ferramenta para disponível
-    if (rental.bdChaveFer) {
-      await prisma.tbferramentas.update({
-        where: { bdChave: BigInt(rental.bdChaveFer) },
-        data: { bdEstado: "dispon_vel" },
-      })
-    }
-
-    return {
-      success: true,
-      message: "Aluguel finalizado com sucesso!",
-    }
-  } catch (error) {
-    console.error("Erro ao finalizar aluguel:", error)
-    return {
-      success: false,
-      message: "Erro ao finalizar aluguel. Tente novamente.",
-    }
-  }
-}
-
-// Função para buscar aluguéis ativos de um cliente
-export async function getActiveRentals(clientId: string) {
-  try {
-    const rentals = await prisma.tbalugueis.findMany({
+    const totalProducts = await prisma.tbFerramentas.count()
+    const totalClients = await prisma.tbClientes.count()
+    const availableProducts = await prisma.tbFerramentas.count({
       where: {
-        bdChaveCli: Number.parseInt(clientId),
-        bdStatus: "ativo",
+        bdAtivo: true,
+        bdEstado: "disponível",
       },
-      orderBy: { bdDTINICIO: "desc" },
     })
+
+    const sampleProduct = await prisma.tbFerramentas.findFirst({
+      include: {
+        cliente: true,
+      },
+    })
+
+    console.log("Estatísticas do banco:")
+    console.log("- Total de produtos:", totalProducts)
+    console.log("- Total de clientes:", totalClients)
+    console.log("- Produtos disponíveis:", availableProducts)
+    console.log("- Exemplo de produto:", sampleProduct)
 
     return {
       success: true,
-      rentals: rentals.map((rental: { bdChave: { toString: () => any }; bdChaveFer: { toString: () => any }; bdDTINICIO: any; bdVlrTotal: { toNumber: () => any }; bdStatus: any }) => ({
-        id: rental.bdChave.toString(),
-        toolId: rental.bdChaveFer?.toString(),
-        startDate: rental.bdDTINICIO,
-        totalValue: rental.bdVlrTotal?.toNumber(),
-        status: rental.bdStatus,
-      })),
+      message: `Conexão OK. Produtos: ${totalProducts}, Clientes: ${totalClients}, Disponíveis: ${availableProducts}`,
+      stats: {
+        totalProducts,
+        totalClients,
+        availableProducts,
+      },
+      sample: sampleProduct,
     }
   } catch (error) {
-    console.error("Erro ao buscar aluguéis ativos:", error)
+    console.error("Erro ao testar conexão:", error)
     return {
       success: false,
-      rentals: [],
+      message: "Erro na conexão com o banco de dados",
+      error: error,
     }
+  }
+}
+
+// Função para obter categorias disponíveis
+export async function getCategories(): Promise<string[]> {
+  try {
+    const categories = await prisma.tbFerramentas.findMany({
+      where: {
+        bdAtivo: true,
+        bdCategoria: { not: null },
+      },
+      select: {
+        bdCategoria: true,
+      },
+      distinct: ["bdCategoria"],
+    })
+
+    return categories
+      .map((cat: { bdCategoria: any }) => cat.bdCategoria)
+      .filter((cat: any): cat is string => cat !== null)
+      .sort()
+  } catch (error) {
+    console.error("Erro ao buscar categorias:", error)
+    return []
   }
 }
