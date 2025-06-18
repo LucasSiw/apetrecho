@@ -16,8 +16,8 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "ToolMart - Sua Loja de Ferramentas Online",
-  description: "Encontre as melhores ferramentas para seus projetos",
+  title: "Apetrecho",
+  description: "Encontre os melhores apetrechos e ferramentas para seus projetos",
 }
 
 export default function RootLayout({

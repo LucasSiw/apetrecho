@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model tbalugueis {
+  bdChave    BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
+  bdChaveCli Int?
+  bdChaveFer Int?
+  bdDTINICIO DateTime             @default(now()) @db.Timestamp(0)
+  bdDTFIM    DateTime?            @db.Timestamp(0)
+  bdStatus   tbalugueis_bdStatus? @default(ativo)
+  bdVlrTotal Decimal?             @db.Decimal(10, 2)
+}
+
+model tbclientes {
+  bdChave        Int       @id @default(autoincrement())
+  bdNome         String    @db.VarChar(100)
+  bdEmail        String    @unique(map: "bdEmail") @db.VarChar(100)
+  bdTelefone     String?   @db.VarChar(20)
+  bdcpf          String?   @unique(map: "bdcpf") @db.Char(14)
+  bdDTNASCIMENTO DateTime? @db.Date
+  bdLogradouro   String    @db.VarChar(100)
+  bdNumero       String    @db.VarChar(10)
+  bdComplemento  String?   @db.VarChar(50)
+  bdBairro       String    @db.VarChar(50)
+  bdCidade       String    @db.VarChar(50)
+  bdEstado       String    @db.Char(2)
+  bdCEP          String    @db.Char(9)
+  bdDTCriacao    DateTime  @default(now()) @db.Timestamp(0)
+  bdAtivo        Boolean?  @default(true)
+  bdSenha        String    @db.VarChar(255)
+}
+
+model tbferramentas {
+  bdChave        BigInt                  @id @default(autoincrement()) @db.UnsignedBigInt
+  bdChaveCli     Int?
+  bdNome         String                  @db.VarChar(100)
+  bdDescricao    String?                 @db.Text
+  bdCategoria    String?                 @db.VarChar(50)
+  bdURLIMG       String?                 @db.Text
+  bdPrecoAluguel Decimal                 @db.Decimal(10, 2)
+  bdEstado       tbferramentas_bdEstado? @default(dispon_vel)
+  bdDTCADASTRO   DateTime                @default(now()) @db.Timestamp(0)
+  bdAtivo        Boolean?                @default(true)
+}
+
+model tbferramentas_disponibilizadas {
+  bdChave              BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  bdChaveFer           Int?
+  bdChaveCli           Int?
+  bdPrecoAluguel       Decimal  @db.Decimal(10, 2)
+  bdDTDISPONIBILIZACAO DateTime @default(now()) @db.Timestamp(0)
+  bdAtivo              Boolean? @default(true)
+}
+
+model tblogatividades {
+  bdChave     BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  bdChaveCli  Int?
+  bdAcao      String?  @db.VarChar(255)
+  bdDTHR      DateTime @default(now()) @db.Timestamp(0)
+  bdIPOrigm   String?  @db.VarChar(45)
+  bdNavegador String?  @db.Text
+}
+
+enum tbalugueis_bdStatus {
+  ativo
+  finalizado
+  cancelado
+}
+
+enum tbferramentas_bdEstado {
+  dispon_vel @map("disponível")
+  alugada
+  manuten__o @map("manutenção")
+}
