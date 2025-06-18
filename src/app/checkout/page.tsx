@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -107,7 +105,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
       <main className="flex-1 container py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
@@ -274,7 +271,6 @@ export default function CheckoutPage() {
           </div>
         </div>
       </main>
-      <SiteFooter />
     </div>
   )
 }

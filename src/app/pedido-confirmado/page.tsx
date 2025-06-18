@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CheckCircle, Package, Home, FileText } from "lucide-react"
@@ -35,21 +33,18 @@ export default function OrderConfirmationPage() {
   if (!order) {
     return (
       <div className="flex min-h-screen flex-col">
-        <SiteHeader />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Pedido não encontrado</h1>
             <Button onClick={() => router.push("/")}>Voltar à página inicial</Button>
           </div>
         </main>
-        <SiteFooter />
       </div>
     )
   }
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
       <main className="flex-1 container py-8">
         <div className="max-w-2xl mx-auto">
           {/* Success Header */}
@@ -202,7 +197,6 @@ export default function OrderConfirmationPage() {
           </div>
         </div>
       </main>
-      <SiteFooter />
     </div>
   )
 }

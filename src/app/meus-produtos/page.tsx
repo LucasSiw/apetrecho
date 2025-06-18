@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Edit, Trash2, Package, Loader2 } from "lucide-react"
@@ -77,7 +75,6 @@ export default function MeusProdutosPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
       <main className="flex-1 container py-8 md:py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
@@ -206,7 +203,6 @@ export default function MeusProdutosPage() {
           </DialogContent>
         </Dialog>
       </main>
-      <SiteFooter />
     </div>
   )
 }

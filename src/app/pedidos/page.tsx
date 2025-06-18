@@ -2,8 +2,6 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -54,7 +52,6 @@ export default function OrdersPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
       <main className="flex-1 container py-8 md:py-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
@@ -166,7 +163,6 @@ export default function OrdersPage() {
           </div>
         )}
       </main>
-      <SiteFooter />
     </div>
   )
 }

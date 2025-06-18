@@ -1,12 +1,9 @@
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function HelpPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
       <main className="flex-1">
         <section className="container py-8 md:py-12">
           <div className="flex flex-col items-start gap-4">
@@ -71,7 +68,6 @@ export default function HelpPage() {
           </div>
         </section>
       </main>
-      <SiteFooter />
     </div>
   )
 }
