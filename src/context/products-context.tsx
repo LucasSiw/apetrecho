@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useAuth } from "@/context/auth-context"
-import { createProduct, updateProduct, deleteProduct, getUserProducts } from "@/lib/products"
+import { createProduct, updateProduct, deleteProduct, getUserProducts } from "@/lib/actions/products"
 import type { Product } from "@/types/product"
 
 interface ProductsContextType {
