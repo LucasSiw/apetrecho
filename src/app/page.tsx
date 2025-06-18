@@ -1,7 +1,5 @@
 import { HeroSection } from "@/components/hero-section"
 import { ProductGrid } from "@/components/product-grid"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { getAllProducts, getFeaturedProducts } from "@/lib/actions/products"
 
 export default async function Home() {
@@ -16,7 +14,6 @@ export default async function Home() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
       <main className="flex-1">
         <HeroSection />
 
@@ -68,7 +65,6 @@ export default async function Home() {
           </section>
         )}
       </main>
-      <SiteFooter />
     </div>
   )
 }

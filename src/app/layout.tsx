@@ -10,6 +10,8 @@ import { NotificationsProvider } from "@/context/notifications-context"
 import { OrdersProvider } from "@/context/orders-context"
 import { ProductsProvider } from "@/context/products-context"
 import { Toaster } from "@/components/ui/toaster"
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -33,7 +35,11 @@ export default function RootLayout({
                 <FavoritesProvider>
                   <NotificationsProvider>
                     <OrdersProvider>
-                      {children}
+                      <div className="relative flex min-h-screen flex-col">
+                        <SiteHeader />
+                        <main className="flex-1">{children}</main>
+                        <SiteFooter />
+                      </div>
                       <Toaster />
                     </OrdersProvider>
                   </NotificationsProvider>
