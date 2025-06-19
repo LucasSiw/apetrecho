@@ -1,44 +1,42 @@
-"use client"
+"use client";
 
-import { useMemo } from "react"
-import { ProductCard } from "@/components/product-card"
-import { enhancedProducts } from "@/context/products-context"
-import { useProducts } from "@/context/products-context"
-import type { Product } from "@/types/product"
+import { useMemo } from "react";
+import { ProductCard } from "@/components/product-card";
+import { useProducts } from "@/context/products-context";
+import type { Product } from "@/types/product";
 
 interface RelatedProductsProps {
-  currentProduct: Product
+  currentProduct: Product;
 }
 
 export function RelatedProducts({ currentProduct }: RelatedProductsProps) {
-  const { userProducts } = useProducts()
+  const { userProducts, allProducts } = useProducts(); // Replaced enhancedProducts with allProducts
 
   const relatedProducts = useMemo(() => {
-    const allProducts = [...enhancedProducts, ...userProducts]
+    const allAvailableProducts = [...allProducts, ...userProducts]; // Use allProducts instead
 
     // Filtrar produtos relacionados (mesma categoria, excluindo o produto atual)
-    const related = allProducts
+    const related = allAvailableProducts
       .filter(
         (product) =>
           product.id !== currentProduct.id &&
           (product.category === currentProduct.category || product.brand === currentProduct.brand),
       )
-      .slice(0, 4)
+      .slice(0, 4);
 
     // Se não houver produtos relacionados suficientes, adicionar produtos aleatórios
     if (related.length < 4) {
-      const remaining = allProducts
+      const remaining = allAvailableProducts
         .filter((product) => product.id !== currentProduct.id && !related.some((r) => r.id === product.id))
-        .slice(0, 4 - related.length)
-
-      related.push(...remaining)
+        .slice(0, 4 - related.length);
+      related.push(...remaining);
     }
 
-    return related
-  }, [currentProduct, userProducts])
+    return related;
+  }, [currentProduct, userProducts, allProducts]); // Added allProducts to dependencies
 
   if (relatedProducts.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -50,5 +48,5 @@ export function RelatedProducts({ currentProduct }: RelatedProductsProps) {
         ))}
       </div>
     </section>
-  )
+  );
 }

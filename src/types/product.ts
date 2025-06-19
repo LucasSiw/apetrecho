@@ -5,7 +5,7 @@ export interface Product {
   price: number
   originalPrice?: number
   image: string
-  images?: string[]
+  images?: string[] // Array de imagens
   category?: string
   rating?: number
   reviewCount?: number
@@ -15,7 +15,24 @@ export interface Product {
     count: number
     value: number
   }
-  specifications?: Record<string, string>
+  specifications?: string[]
   brand?: string
   sku?: string
+  condition?: string // Nova, Usada, Seminova
+  owner?: {
+    // Informações do proprietário
+    name: string
+    email: string
+    phone?: string | null
+  }
+}
+
+export interface ProductFormData {
+  name: string
+  description: string
+  price: number
+  category: string
+  images: string[]
+  condition: string
+  observations: string
 }

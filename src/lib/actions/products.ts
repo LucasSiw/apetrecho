@@ -14,9 +14,12 @@ export interface ProductInput {
   category?: string
   stock: number
   image: string
+  images?: string[]
   brand?: string
   isNew: boolean
   userId: string
+  condition?: string
+  observations?: string
 }
 
 export async function createProduct(data: ProductInput) {
@@ -28,12 +31,14 @@ export async function createProduct(data: ProductInput) {
         bdNome: data.name,
         bdDescricao: data.description,
         bdCategoria: data.category || "Geral",
-        bdURLIMG: data.image,
+        bdURLIMG: data.image, // Manter compatibilidade
         bdPrecoAluguel: new Decimal(data.price.toString()),
         bdChaveCli: Number.parseInt(data.userId),
         bdEstado: data.stock > 0 ? "disponível" : "manutenção",
         bdAtivo: true,
         bdDTCADASTRO: new Date(),
+        bdCondicao: data.condition || "Usada",
+        bdObservacoes: data.observations || null,
       },
     })
 
@@ -46,13 +51,13 @@ export async function createProduct(data: ProductInput) {
     return {
       success: true,
       productId: product.bdChave.toString(),
-      message: "Produto criado com sucesso!",
+      message: "Produto cadastrado com sucesso!",
     }
   } catch (error) {
     console.error("Erro ao criar produto:", error)
     return {
       success: false,
-      message: "Erro ao criar produto. Tente novamente.",
+      message: "Erro ao cadastrar produto. Tente novamente.",
     }
   }
 }
@@ -68,7 +73,10 @@ export async function updateProduct(productId: string, data: Partial<ProductInpu
     if (data.price !== undefined) updateData.bdPrecoAluguel = new Decimal(data.price.toString())
     if (data.category !== undefined) updateData.bdCategoria = data.category
     if (data.image !== undefined) updateData.bdURLIMG = data.image
+    if (data.images !== undefined) updateData.bdImagens = JSON.stringify(data.images)
     if (data.stock !== undefined) updateData.bdEstado = data.stock > 0 ? "disponível" : "manutenção"
+    if (data.condition !== undefined) updateData.bdCondicao = data.condition
+    if (data.observations !== undefined) updateData.bdObservacoes = data.observations
 
     const updatedProduct = await prisma.tbFerramentas.update({
       where: { bdChave: BigInt(productId) },
@@ -136,15 +144,16 @@ export async function getUserProducts(userId: string): Promise<Product[]> {
         bdChaveCli: Number.parseInt(userId),
         bdAtivo: true,
       },
+      include: {
+        cliente: true,
+      },
       orderBy: { bdDTCADASTRO: "desc" },
     })
 
     console.log("Produtos encontrados no banco:", products.length)
-    console.log("Primeiro produto (se existir):", products[0])
 
-    const convertedProducts = products.map((product: PrismaProduct) => {
+    const convertedProducts = products.map((product) => {
       const converted = convertPrismaProductToProduct(product as PrismaProduct)
-      console.log("Produto convertido:", converted)
       return converted
     })
 
@@ -157,6 +166,30 @@ export async function getUserProducts(userId: string): Promise<Product[]> {
   }
 }
 
+export async function getAllProducts(): Promise<Product[]> {
+  try {
+    console.log("Buscando todos os produtos disponíveis")
+
+    const products = await prisma.tbFerramentas.findMany({
+      where: {
+        bdAtivo: true,
+        bdEstado: "disponível",
+      },
+      include: {
+        cliente: true,
+      },
+      orderBy: { bdDTCADASTRO: "desc" },
+    })
+
+    console.log("Todos os produtos encontrados:", products.length)
+
+    return products.map((product) => convertPrismaProductToProduct(product as PrismaProduct))
+  } catch (error) {
+    console.error("Erro ao buscar todos os produtos:", error)
+    return []
+  }
+}
+
 export async function getProductById(productId: string): Promise<Product | null> {
   try {
     console.log("Buscando produto por ID:", productId)
@@ -164,7 +197,7 @@ export async function getProductById(productId: string): Promise<Product | null>
     const product = await prisma.tbFerramentas.findUnique({
       where: { bdChave: BigInt(productId) },
       include: {
-        cliente: true, // Incluir dados do cliente/proprietário
+        cliente: true,
       },
     })
 
@@ -180,30 +213,6 @@ export async function getProductById(productId: string): Promise<Product | null>
   } catch (error) {
     console.error("Erro ao buscar produto:", error)
     return null
-  }
-}
-
-export async function getAllProducts(): Promise<Product[]> {
-  try {
-    console.log("Buscando todos os produtos disponíveis")
-
-    const products = await prisma.tbFerramentas.findMany({
-      where: {
-        bdAtivo: true,
-        bdEstado: "disponível",
-      },
-      include: {
-        cliente: true, // Incluir dados do proprietário
-      },
-      orderBy: { bdDTCADASTRO: "desc" },
-    })
-
-    console.log("Todos os produtos encontrados:", products.length)
-
-    return products.map((product: PrismaProduct) => convertPrismaProductToProduct(product as PrismaProduct))
-  } catch (error) {
-    console.error("Erro ao buscar todos os produtos:", error)
-    return []
   }
 }
 
@@ -237,7 +246,7 @@ export async function searchProducts(searchTerm: string, category?: string): Pro
 
     console.log("Produtos encontrados na busca:", products.length)
 
-    return products.map((product: PrismaProduct) => convertPrismaProductToProduct(product as PrismaProduct))
+    return products.map((product) => convertPrismaProductToProduct(product as PrismaProduct))
   } catch (error) {
     console.error("Erro ao buscar produtos:", error)
     return []
@@ -262,11 +271,11 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
     console.log("Produtos em destaque encontrados:", products.length)
 
-    return products.map((product: PrismaProduct) => {
+    return products.map((product) => {
       const converted = convertPrismaProductToProduct(product as PrismaProduct)
       return {
         ...converted,
-        isNew: true, // Produtos em destaque são marcados como novos
+        isNew: true,
       }
     })
   } catch (error) {
@@ -299,7 +308,6 @@ export async function testDatabaseConnection() {
     console.log("- Total de produtos:", totalProducts)
     console.log("- Total de clientes:", totalClients)
     console.log("- Produtos disponíveis:", availableProducts)
-    console.log("- Exemplo de produto:", sampleProduct)
 
     return {
       success: true,
@@ -318,29 +326,5 @@ export async function testDatabaseConnection() {
       message: "Erro na conexão com o banco de dados",
       error: error,
     }
-  }
-}
-
-// Função para obter categorias disponíveis
-export async function getCategories(): Promise<string[]> {
-  try {
-    const categories = await prisma.tbFerramentas.findMany({
-      where: {
-        bdAtivo: true,
-        bdCategoria: { not: null },
-      },
-      select: {
-        bdCategoria: true,
-      },
-      distinct: ["bdCategoria"],
-    })
-
-    return categories
-      .map((cat: { bdCategoria: any }) => cat.bdCategoria)
-      .filter((cat: any): cat is string => cat !== null)
-      .sort()
-  } catch (error) {
-    console.error("Erro ao buscar categorias:", error)
-    return []
   }
 }
