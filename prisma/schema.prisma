@@ -23,6 +23,7 @@ model tbClientes {
   bdCEP            String    @db.Char(9)
   bdDTCriacao      DateTime  @default(now()) @db.Timestamp(0)
   bdAtivo          Boolean?  @default(true)
+  bdSenha          String    @db.VarChar(255)
 
   // Relacionamentos
   ferramentas      tbFerramentas[]

@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -13,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useAuth } from "@/context/auth-context" // Assuming useAuth provides login function
+import { useAuth } from "@/context/auth-context"
 
 interface LoginModalProps {
   isOpen: boolean
@@ -26,42 +24,19 @@ export function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const { login } = useAuth() // Assuming useAuth has a login function that handles setting user state and token
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setErrorMsg(null) // Clear previous errors
-
+    setErrorMsg(null)
     setIsLoading(true)
 
     try {
-      const payload = {
-        email,
-        password,
-      }
-      const res = await fetch('/api/login', { // *** Changed endpoint to /api/login ***
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        // If the response is not OK (e.g., 401 Unauthorized, 400 Bad Request)
-        setErrorMsg(data.error || 'Login failed. Please check your credentials.')
-        return
-      }
-
-      // If login is successful
-      if (login) { // Check if login function exists from context
-        login(data.token, data.user); // Call the login function from your auth context
-      }
-
-      onClose() // Close the modal on successful login
-    } catch (err) {
-      console.error('[ERRO FETCH FRONT]', err)
-      setErrorMsg('Failed to connect to the server. Please try again later.')
+      await login(email, password) // ✅ apenas isso
+      onClose()
+    } catch (err: any) {
+      console.error('[ERRO LOGIN CONTEXT]', err)
+      setErrorMsg(err.message || 'Erro ao tentar fazer login.')
     } finally {
       setIsLoading(false)
     }
@@ -79,9 +54,7 @@ export function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="email" className="text-sm">
-                Email
-              </Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -89,25 +62,21 @@ export function LoginModal({ isOpen, onClose, onRegisterClick }: LoginModalProps
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="text-base" // Prevents zoom on iOS
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password" className="text-sm">
-                Senha
-              </Label>
+              <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="text-base" // Prevents zoom on iOS
               />
             </div>
-            {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>} {/* Display error message */}
+            {errorMsg && <p className="text-red-500 text-sm mt-2">{errorMsg}</p>}
           </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+          <DialogFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Entrando..." : "Entrar"}
             </Button>
