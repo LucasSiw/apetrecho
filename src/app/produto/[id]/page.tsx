@@ -1,9 +1,8 @@
+// apeterecho/src/app/produto/[id]/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,18 +10,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Star, Heart, ShoppingCart, Minus, Plus, Share2, ArrowLeft, Truck, Shield, RotateCcw } from "lucide-react"
 import { useCart } from "@/context/cart-context"
 import { useFavorites } from "@/context/favorites-context"
-import { useProducts } from "@/context/products-context"
 import { ProductReviews } from "@/components/product-reviews"
 import { RelatedProducts } from "@/components/related-products"
 import { Input } from "@/components/ui/input"
 import type { Product } from "@/types/product"
+import { getProductById } from "@/lib/actions/products" 
 
 export default function ProductPage() {
   const params = useParams()
   const router = useRouter()
   const { addToCart } = useCart()
   const { favorites, addToFavorites, removeFromFavorites } = useFavorites()
-  const { userProducts } = useProducts()
   const [product, setProduct] = useState<Product | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
@@ -31,14 +29,31 @@ export default function ProductPage() {
   const productId = params.id as string
 
   useEffect(() => {
-    const allProducts = [...userProducts]
-    const foundProduct = allProducts.find((p) => p.id === productId)
-
-    if (foundProduct) {
-      setProduct(foundProduct)
+    if (!productId) {
+      setLoading(false);
+      return;
     }
-    setLoading(false)
-  }, [productId, userProducts])
+
+    async function fetchProductData() {
+      setLoading(true)
+      try {
+        const foundProduct = await getProductById(productId)
+
+        if (foundProduct) {
+          setProduct(foundProduct)
+        } else {
+          setProduct(null)
+        }
+      } catch (error) {
+        console.error("Erro ao buscar produto:", error)
+        setProduct(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProductData()
+  }, [productId])
   const isFavorite = product ? favorites.some((fav) => fav.id === product.id) : false
 
   const formatPrice = (price: number) => {
@@ -78,7 +93,6 @@ export default function ProductPage() {
         console.log("Erro ao compartilhar:", err)
       }
     } else {
-      // Fallback para copiar URL
       navigator.clipboard.writeText(window.location.href)
       alert("Link copiado para a área de transferência!")
     }
@@ -87,14 +101,12 @@ export default function ProductPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col">
-        <SiteHeader />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
             <p>Carregando produto...</p>
           </div>
         </main>
-        <SiteFooter />
       </div>
     )
   }
@@ -102,14 +114,12 @@ export default function ProductPage() {
   if (!product) {
     return (
       <div className="flex min-h-screen flex-col">
-        <SiteHeader />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Produto não encontrado</h1>
             <Button onClick={() => router.push("/")}>Voltar à página inicial</Button>
           </div>
         </main>
-        <SiteFooter />
       </div>
     )
   }
@@ -123,7 +133,6 @@ export default function ProductPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
       <main className="flex-1 container py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-6">
@@ -348,6 +357,7 @@ export default function ProductPage() {
           </TabsContent>
 
           <TabsContent value="reviews" className="mt-6">
+            {/* Certifique-se de que ProductReviews espera um `productId` string */}
             <ProductReviews productId={product.id} />
           </TabsContent>
         </Tabs>
@@ -355,7 +365,6 @@ export default function ProductPage() {
         {/* Produtos Relacionados */}
         <RelatedProducts currentProduct={product} />
       </main>
-      <SiteFooter />
     </div>
   )
 }

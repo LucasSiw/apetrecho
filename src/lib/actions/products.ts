@@ -37,7 +37,7 @@ export async function createProduct(data: ProductInput) {
         bdEstado: data.stock > 0 ? "disponível" : "manutenção",
         bdAtivo: true,
         bdDTCADASTRO: new Date(),
-        bdCondicao: data.condition || "Usada",
+        // bdCondicao: data.condition || "Usada", // Removed: not a valid field in schema
         bdObservacoes: data.observations || null,
       },
     })

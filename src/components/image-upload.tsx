@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +16,12 @@ interface ImageUploadProps {
   className?: string
 }
 
-export function ImageUpload({ images, onImagesChange, maxImages = 5, className }: ImageUploadProps) {
+export function ImageUpload({
+  images,
+  onImagesChange,
+  maxImages = 5,
+  className,
+}: ImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -25,7 +29,6 @@ export function ImageUpload({ images, onImagesChange, maxImages = 5, className }
     const files = Array.from(event.target.files || [])
     if (files.length === 0) return
 
-    // Verificar se não excede o limite
     if (images.length + files.length > maxImages) {
       alert(`Você pode adicionar no máximo ${maxImages} imagens`)
       return
@@ -34,47 +37,48 @@ export function ImageUpload({ images, onImagesChange, maxImages = 5, className }
     setUploading(true)
 
     try {
-      const newImages: string[] = []
+      const newImageUrls: string[] = []
 
       for (const file of files) {
-        // Validar tipo de arquivo
         if (!file.type.startsWith("image/")) {
           alert(`${file.name} não é uma imagem válida`)
           continue
         }
 
-        // Validar tamanho (máximo 5MB)
         if (file.size > 5 * 1024 * 1024) {
           alert(`${file.name} é muito grande. Máximo 5MB por imagem`)
           continue
         }
 
-        // Converter para base64 para armazenamento local
-        const base64 = await convertToBase64(file)
-        newImages.push(base64)
+        const url = await uploadImageToServer(file)
+        newImageUrls.push(url)
       }
 
-      // Atualizar lista de imagens
-      onImagesChange([...images, ...newImages])
+      onImagesChange([...images, ...newImageUrls])
     } catch (error) {
-      console.error("Erro ao processar imagens:", error)
+      console.error("Erro ao fazer upload das imagens:", error)
       alert("Erro ao processar as imagens")
     } finally {
       setUploading(false)
-      // Limpar input
       if (fileInputRef.current) {
         fileInputRef.current.value = ""
       }
     }
   }
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
-      reader.readAsDataURL(file)
+  const uploadImageToServer = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
     })
+
+    if (!response.ok) throw new Error("Falha no upload")
+
+    const data = await response.json()
+    return data.url // retorna o caminho, ex: "/uploads/123-img.jpg"
   }
 
   const removeImage = (index: number) => {
@@ -93,7 +97,6 @@ export function ImageUpload({ images, onImagesChange, maxImages = 5, className }
         Adicione até {maxImages} fotos do seu produto (máximo 5MB cada)
       </p>
 
-      {/* Botão de Upload */}
       <div className="mb-4">
         <Input
           ref={fileInputRef}
@@ -124,7 +127,6 @@ export function ImageUpload({ images, onImagesChange, maxImages = 5, className }
         </Button>
       </div>
 
-      {/* Preview das Imagens */}
       {images.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {images.map((image, index) => (
@@ -158,7 +160,6 @@ export function ImageUpload({ images, onImagesChange, maxImages = 5, className }
         </div>
       )}
 
-      {/* Placeholder quando não há imagens */}
       {images.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-8">

@@ -80,7 +80,13 @@ export async function registerUser(userData: RegisterData): Promise<UserData> {
   // Log da atividade
   await logActivity(user.bdChave, "Registro de usuário", null)
 
-  return user
+  return {
+    ...user,
+    bdTelefone: user.bdTelefone ?? undefined,
+    bdcpf: user.bdcpf ?? undefined,
+    bdDTNASCIMENTO: user.bdDTNASCIMENTO ?? undefined,
+    bdComplemento: user.bdComplemento ?? undefined,
+  }
 }
 
 // Login do usuário
@@ -123,8 +129,17 @@ export async function loginUser(loginData: LoginData): Promise<{ user: UserData;
   // Remove a senha do retorno
   const { bdSenha, bdAtivo, ...userWithoutPassword } = user
 
+  // Convert nullable fields to undefined if null
+  const userData: UserData = {
+    ...userWithoutPassword,
+    bdTelefone: userWithoutPassword.bdTelefone ?? undefined,
+    bdcpf: userWithoutPassword.bdcpf ?? undefined,
+    bdDTNASCIMENTO: userWithoutPassword.bdDTNASCIMENTO ?? undefined,
+    bdComplemento: userWithoutPassword.bdComplemento ?? undefined,
+  }
+
   return {
-    user: userWithoutPassword,
+    user: userData,
     token,
   }
 }
@@ -150,7 +165,15 @@ export async function getUserById(userId: number): Promise<UserData | null> {
     },
   })
 
-  return user
+  if (!user) return null
+
+  return {
+    ...user,
+    bdTelefone: user.bdTelefone ?? undefined,
+    bdcpf: user.bdcpf ?? undefined,
+    bdDTNASCIMENTO: user.bdDTNASCIMENTO ?? undefined,
+    bdComplemento: user.bdComplemento ?? undefined,
+  }
 }
 
 // Log de atividades
