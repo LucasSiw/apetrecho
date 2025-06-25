@@ -1,3 +1,4 @@
+// apeterecho/src/components/cart-items.tsx
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -9,19 +10,19 @@ import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { LoginModal } from "@/components/login-modal"
 import { RegisterModal } from "@/components/register-modal"
-
-// Importar o novo componente de formulário de pagamento
 import { PaymentForm } from "@/components/payment-form"
-import { useRouter } from "next/navigation" // Adicione para redirecionar após o pagamento
+import { useRouter } from "next/navigation"
+import { createRental, getUserRentals } from "@/lib/actions/orders" // Importar a nova Server Action
+import { useToast } from "@/app/hooks/use-toast" // Assumindo que você tem este hook
 
-// Componente CartItems (sem alterações significativas, apenas para referência)
 export function CartItems() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart()
   const { user } = useAuth()
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const [showPaymentForm, setShowPaymentForm] = useState(false) // Novo estado para controlar o formulário de pagamento
-  const router = useRouter() // Para redirecionamento
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const router = useRouter()
+  const { toast } = useToast() // Inicializa o toast
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("pt-BR", {
@@ -39,22 +40,77 @@ export function CartItems() {
       setShowLoginModal(true)
       return
     }
-    // Se o usuário está logado, mostra o formulário de pagamento
     setShowPaymentForm(true)
   }
 
-  const handlePaymentSuccess = () => {
-    alert("Pagamento realizado com sucesso! Seu pedido foi confirmado.")
-    clearCart() // Limpa o carrinho após o sucesso
-    router.push("/pedido-confirmado") // Redireciona para uma página de confirmação de pedido
-  }
+  const handlePaymentSuccess = async () => {
+    if (!user || !user.id) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Usuário não logado ou ID de usuário ausente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Processar cada item do carrinho como um aluguel
+    for (const item of cartItems) {
+      try {
+        const rentalData = {
+          clienteId: Number(user.id), // O ID do cliente que está alugando (convertido para number)
+          ferramentaId: BigInt(item.id), // O ID da ferramenta, convertido para BigInt
+          dataInicio: new Date(), // Data/hora atual do aluguel
+          // dataFim: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)), // Exemplo: alugar por 7 dias
+          // Se seu sistema tiver duração de aluguel flexível, capture isso da UI
+          // Ou defina uma duração padrão. Se não tiver dataFim, não inclua no objeto.
+          valorTotal: item.price * item.quantity, // Preço total do item
+          statusInicial: "confirmado", // Status inicial do aluguel
+        };
+
+        const result = await createRental(rentalData);
+
+        if (result.success) {
+          console.log(`Aluguel para ${item.name} registrado com sucesso!`);
+          // Opcional: mostrar um toast para cada item ou um único toast no final
+        } else {
+          console.error(`Falha ao registrar aluguel para ${item.name}: ${result.message}`);
+          toast({
+            title: "Erro ao registrar aluguel",
+            description: `Não foi possível registrar o aluguel para ${item.name}: ${result.message}`,
+            variant: "destructive",
+          });
+          // Se um item falhar, você pode decidir se continua ou para o processo
+          // Por enquanto, vamos continuar, mas reportar o erro.
+        }
+      } catch (error) {
+        console.error(`Erro inesperado ao registrar aluguel para ${item.name}:`, error);
+        toast({
+          title: "Erro inesperado",
+          description: `Ocorreu um erro inesperado ao registrar o aluguel para ${item.name}.`,
+          variant: "destructive",
+        });
+      }
+    }
+
+    // Após tentar registrar todos os aluguéis:
+    toast({
+      title: "Pagamento realizado!",
+      description: "Seu pedido foi confirmado e o(s) aluguel(is) registrado(s).",
+      variant: "default",
+    });
+    clearCart(); // Limpa o carrinho após o sucesso
+    router.push("/pedido-confirmado"); // Redireciona para a página de confirmação
+  };
 
   const handlePaymentError = (message: string) => {
-    alert(`Erro no pagamento: ${message}`)
-    // Poderia adicionar mais lógica aqui, como permitir que o usuário tente novamente
-  }
+    toast({
+      title: "Erro no pagamento",
+      description: `Ocorreu um erro ao processar seu pagamento: ${message}`,
+      variant: "destructive",
+    });
+  };
 
-  if (cartItems.length === 0 && !showPaymentForm) { // Se o carrinho estiver vazio e não estiver no formulário de pagamento
+  if (cartItems.length === 0 && !showPaymentForm) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <h2 className="text-2xl font-semibold tracking-tight">Seu carrinho está vazio</h2>
@@ -68,7 +124,7 @@ export function CartItems() {
 
   return (
     <div className="w-full">
-      {!showPaymentForm ? ( // Renderiza os itens do carrinho ou o formulário de pagamento
+      {!showPaymentForm ? (
         <>
           <div className="grid gap-4">
             {cartItems.map((item) => (
@@ -152,14 +208,12 @@ export function CartItems() {
           </Card>
         </>
       ) : (
-        // Se showPaymentForm for true, exibe o formulário de pagamento
         <PaymentForm
           totalAmount={calculateTotal()}
           onPaymentSuccess={handlePaymentSuccess}
           onPaymentError={handlePaymentError}
         />
       )}
-
 
       <LoginModal
         isOpen={showLoginModal}
@@ -182,7 +236,6 @@ export function CartItems() {
   )
 }
 
-// O componente CartPage continua chamando CartItems
 export default function CartPage() {
   return (
     <div className="flex min-h-screen flex-col">
@@ -191,7 +244,7 @@ export default function CartPage() {
           <div className="flex flex-col items-start gap-4">
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl">Seu Carrinho</h1>
             <p className="text-muted-foreground">Revise seus itens e prossiga para o checkout quando estiver pronto.</p>
-            <CartItems /> {/* CartItems agora gerencia a exibição do PaymentForm */}
+            <CartItems />
           </div>
         </section>
       </main>

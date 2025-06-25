@@ -1,3 +1,4 @@
+// apeterecho/src/components/cart-items.tsx
 "use client"
 
 import { Button } from "@/components/ui/button"
@@ -9,8 +10,10 @@ import { useState } from "react"
 import { useAuth } from "@/context/auth-context"
 import { LoginModal } from "@/components/login-modal"
 import { RegisterModal } from "@/components/register-modal"
-import { PaymentForm } from "@/components/payment-form" 
+import { PaymentForm } from "@/components/payment-form"
 import { useRouter } from "next/navigation"
+import { getUserRentals, createRental } from "@/lib/actions/orders" // Importar a nova Server Action
+import { useToast } from "@/app/hooks/use-toast" // Assumindo que você tem este hook
 
 export function CartItems() {
   const { cartItems, updateQuantity, removeFromCart, clearCart } = useCart()
@@ -19,6 +22,7 @@ export function CartItems() {
   const [showRegisterModal, setShowRegisterModal] = useState(false)
   const [showPaymentForm, setShowPaymentForm] = useState(false)
   const router = useRouter()
+  const { toast } = useToast() // Inicializa o toast
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("pt-BR", {
@@ -39,13 +43,72 @@ export function CartItems() {
     setShowPaymentForm(true)
   }
 
-  const handlePaymentSuccess = () => {
-    clearCart() 
-    router.push("/pedido-confirmado")
-  }
+  const handlePaymentSuccess = async () => {
+    if (!user || !user.id) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Usuário não logado ou ID de usuário ausente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Processar cada item do carrinho como um aluguel
+    for (const item of cartItems) {
+      try {
+        const rentalData = {
+          clienteId: Number(user.id), // O ID do cliente que está alugando (convertido para number)
+          ferramentaId: BigInt(item.id), // O ID da ferramenta, convertido para BigInt
+          dataInicio: new Date(), // Data/hora atual do aluguel
+          // dataFim: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)), // Exemplo: alugar por 7 dias
+          // Se seu sistema tiver duração de aluguel flexível, capture isso da UI
+          // Ou defina uma duração padrão. Se não tiver dataFim, não inclua no objeto.
+          valorTotal: item.price * item.quantity, // Preço total do item
+          statusInicial: "confirmado", // Status inicial do aluguel
+        };
+
+        const result = await createRental(rentalData);
+
+        if (result.success) {
+          console.log(`Aluguel para ${item.name} registrado com sucesso!`);
+          // Opcional: mostrar um toast para cada item ou um único toast no final
+        } else {
+          console.error(`Falha ao registrar aluguel para ${item.name}: ${result.message}`);
+          toast({
+            title: "Erro ao registrar aluguel",
+            description: `Não foi possível registrar o aluguel para ${item.name}: ${result.message}`,
+            variant: "destructive",
+          });
+          // Se um item falhar, você pode decidir se continua ou para o processo
+          // Por enquanto, vamos continuar, mas reportar o erro.
+        }
+      } catch (error) {
+        console.error(`Erro inesperado ao registrar aluguel para ${item.name}:`, error);
+        toast({
+          title: "Erro inesperado",
+          description: `Ocorreu um erro inesperado ao registrar o aluguel para ${item.name}.`,
+          variant: "destructive",
+        });
+      }
+    }
+
+    // Após tentar registrar todos os aluguéis:
+    toast({
+      title: "Pagamento realizado!",
+      description: "Seu pedido foi confirmado e o(s) aluguel(is) registrado(s).",
+      variant: "default",
+    });
+    clearCart(); // Limpa o carrinho após o sucesso
+    router.push("/pedido-confirmado"); // Redireciona para a página de confirmação
+  };
+
   const handlePaymentError = (message: string) => {
-    alert(`Erro no pagamento: ${message}`)
-  }
+    toast({
+      title: "Erro no pagamento",
+      description: `Ocorreu um erro ao processar seu pagamento: ${message}`,
+      variant: "destructive",
+    });
+  };
 
   if (cartItems.length === 0 && !showPaymentForm) {
     return (
@@ -61,7 +124,6 @@ export function CartItems() {
 
   return (
     <div className="w-full">
-      {/* Condição para renderizar os itens do carrinho OU o formulário de pagamento */}
       {!showPaymentForm ? (
         <>
           <div className="grid gap-4">
@@ -146,7 +208,6 @@ export function CartItems() {
           </Card>
         </>
       ) : (
-        // Se showPaymentForm for true, exiba o PaymentForm
         <PaymentForm
           totalAmount={calculateTotal()}
           onPaymentSuccess={handlePaymentSuccess}
@@ -154,7 +215,6 @@ export function CartItems() {
         />
       )}
 
-      {/* Modais de Login e Registro */}
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
@@ -172,6 +232,22 @@ export function CartItems() {
           setShowLoginModal(true)
         }}
       />
+    </div>
+  )
+}
+
+export default function CartPage() {
+  return (
+    <div className="flex min-h-screen flex-col">
+      <main className="flex-1">
+        <section className="container py-8 md:py-12">
+          <div className="flex flex-col items-start gap-4">
+            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl">Seu Carrinho</h1>
+            <p className="text-muted-foreground">Revise seus itens e prossiga para o checkout quando estiver pronto.</p>
+            <CartItems />
+          </div>
+        </section>
+      </main>
     </div>
   )
 }
