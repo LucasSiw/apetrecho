@@ -1,4 +1,4 @@
-"use client" 
+"use client"
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/auth-context"
@@ -8,34 +8,16 @@ import { Package, CalendarDays, CheckCircle, Clock, XCircle, Loader2 } from "luc
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
-// Definindo um tipo para o Pedido (apenas um exemplo, ajuste conforme seu backend)
-type OrderItem = {
-  productId: string;
-  productName: string;
-  productImage: string;
-  quantity: number;
-  price: number;
-  rentalDuration?: string; // Ex: "7 dias", "30 dias"
-};
-
-type Order = {
-  id: string;
-  date: string; // Ex: "2025-06-25"
-  total: number;
-  status: "confirmado" | "processando" | "em_transito" | "entregue" | "cancelado";
-  items: OrderItem[];
-  paymentMethod: string;
-  estimatedDelivery?: string; // Para aluguéis ou compras com entrega
-};
+import { getUserRentals, UserOrder } from "@/lib/actions/orders" 
 
 export default function MeusPedidosPage() {
   const { user, loading: authLoading } = useAuth()
-  const [orders, setOrders] = useState<Order[]>([])
+  const [orders, setOrders] = useState<UserOrder[]>([]) 
   const [loadingOrders, setLoadingOrders] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    if (authLoading) return; // Espera a autenticação carregar
+    if (authLoading) return; 
 
     if (!user) {
       console.log("Redirecionando para home - usuário não logado para ver pedidos")
@@ -43,56 +25,27 @@ export default function MeusPedidosPage() {
       return
     }
 
-    // Função para simular a busca de pedidos do cliente logado
     const fetchUserOrders = async () => {
       setLoadingOrders(true)
-      // Simulação de delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      try {
+        const result = await getUserRentals(Number(user.id));
 
-      // Dados de exemplo (substitua pela lógica de busca do seu backend)
-      const dummyOrders: Order[] = [
-        {
-          id: "PED001",
-          date: "2025-06-20",
-          total: 120.00,
-          status: "entregue",
-          items: [
-            { productId: "prod1", productName: "Camera Fotográfica Pro", productImage: "/placeholder.svg", quantity: 1, price: 100.00, rentalDuration: "7 dias" },
-            { productId: "prod2", productName: "Lente Grande Angular", productImage: "/placeholder.svg", quantity: 1, price: 20.00, rentalDuration: "7 dias" },
-          ],
-          paymentMethod: "Cartão de Crédito",
-          estimatedDelivery: "2025-06-22",
-        },
-        {
-          id: "PED002",
-          date: "2025-06-24",
-          total: 50.00,
-          status: "em_transito",
-          items: [
-            { productId: "prod3", productName: "Drone Mini Portátil", productImage: "/placeholder.svg", quantity: 1, price: 50.00, rentalDuration: "3 dias" },
-          ],
-          paymentMethod: "PIX",
-          estimatedDelivery: "2025-06-27",
-        },
-        {
-          id: "PED003",
-          date: "2025-06-25",
-          total: 35.00,
-          status: "processando",
-          items: [
-            { productId: "prod4", productName: "Tripé Leve", productImage: "/placeholder.svg", quantity: 1, price: 35.00, rentalDuration: "1 dia" },
-          ],
-          paymentMethod: "Cartão de Crédito",
-        },
-      ]
-      setOrders(dummyOrders)
-      setLoadingOrders(false)
+        if (result.success) {
+          setOrders(result.data);
+        } else {
+          console.error("Falha ao carregar aluguéis:", result.message);
+        }
+      } catch (error) {
+        console.error("Erro ao chamar getUserRentals:", error);
+      } finally {
+        setLoadingOrders(false);
+      }
     }
 
-    if (user) { // Apenas busca se o usuário estiver logado
+    if (user && user.id) {
       fetchUserOrders()
     }
-  }, [user, authLoading, router]) // Dependências do useEffect
+  }, [user, authLoading, router])
 
   const formatPrice = (price: number) => {
     return price.toLocaleString("pt-BR", {
@@ -101,7 +54,7 @@ export default function MeusPedidosPage() {
     })
   }
 
-  const getStatusDisplay = (status: Order["status"]) => {
+  const getStatusDisplay = (status: UserOrder["status"]) => {
     switch (status) {
       case "confirmado":
         return <span className="flex items-center gap-1 text-green-600"><CheckCircle className="h-4 w-4" /> Confirmado</span>
@@ -114,7 +67,7 @@ export default function MeusPedidosPage() {
       case "cancelado":
         return <span className="flex items-center gap-1 text-red-600"><XCircle className="h-4 w-4" /> Cancelado</span>
       default:
-        return status;
+        return <span className="flex items-center gap-1 text-gray-500">{status || "Desconhecido"}</span>;
     }
   }
 
@@ -209,7 +162,7 @@ export default function MeusPedidosPage() {
                 <CardFooter className="bg-muted/50 p-4 text-sm flex justify-between">
                     <span>Método de Pagamento: {order.paymentMethod}</span>
                     {order.estimatedDelivery && (
-                        <span className="text-muted-foreground">Previsão de Entrega: {new Date(order.estimatedDelivery).toLocaleDateString("pt-BR")}</span>
+                        <span className="text-muted-foreground">Previsão de Entrega/Devolução: {new Date(order.estimatedDelivery).toLocaleDateString("pt-BR")}</span>
                     )}
                 </CardFooter>
               </Card>
