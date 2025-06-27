@@ -127,7 +127,7 @@ export function ProductCard({ product, onQuickView }: ProductCardProps) {
             </Button>
             <Button variant="default" size="sm" onClick={handleAddToCart} disabled={product.stock === 0}>
               <ShoppingCart className="h-4 w-4 mr-1" />
-              Comprar
+              Alugar
             </Button>
           </div>
         </div>

@@ -283,7 +283,7 @@ export default function ProductPage() {
                   {product.stock === 0 ? "Esgotado" : "Adicionar ao Carrinho"}
                 </Button>
                 <Button variant="outline" size="lg" className="flex-1">
-                  Comprar Agora
+                  Alugar Agora
                 </Button>
               </div>
             </div>

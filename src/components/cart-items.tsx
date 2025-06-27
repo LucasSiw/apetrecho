@@ -114,7 +114,7 @@ export function CartItems() {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <h2 className="text-2xl font-semibold tracking-tight">Seu carrinho está vazio</h2>
-        <p className="mt-2 text-muted-foreground">Adicione alguns produtos para começar a comprar.</p>
+        <p className="mt-2 text-muted-foreground">Adicione alguns produtos para começar a alugar.</p>
         <Button className="mt-4" asChild>
           <a href="/">Continuar Comprando</a>
         </Button>
