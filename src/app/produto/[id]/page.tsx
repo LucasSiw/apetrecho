@@ -300,7 +300,7 @@ export default function ProductPage() {
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-blue-600" />
                 <div>
-                  <p className="font-medium text-sm">Compra Segura</p>
+                  <p className="font-medium text-sm">Aluguel Segura</p>
                   <p className="text-xs text-muted-foreground">Dados protegidos</p>
                 </div>
               </div>

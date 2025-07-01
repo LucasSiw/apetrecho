@@ -97,10 +97,10 @@ export default function MeusPedidosPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl mb-2">Meus Pedidos</h1>
-            <p className="text-muted-foreground">Acompanhe o status dos seus aluguéis e compras.</p>
+            <p className="text-muted-foreground">Acompanhe o status dos seus aluguéis e alugueis.</p>
           </div>
           <Button variant="outline" asChild className="mt-4 md:mt-0">
-            <Link href="/">Continuar Comprando/Alugando</Link>
+            <Link href="/">Continuar alugar/Alugando</Link>
           </Button>
         </div>
 
@@ -115,7 +115,7 @@ export default function MeusPedidosPage() {
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Nenhum pedido encontrado</h3>
               <p className="text-muted-foreground text-center mb-6 max-w-md">
-                Você ainda não realizou nenhum aluguel ou compra. Explore nossos produtos e encontre o que precisa!
+                Você ainda não realizou nenhum aluguel. Explore nossos produtos e encontre o que precisa!
               </p>
               <Button asChild>
                 <Link href="/">Começar a Alugar</Link>

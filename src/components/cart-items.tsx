@@ -116,7 +116,7 @@ export function CartItems() {
         <h2 className="text-2xl font-semibold tracking-tight">Seu carrinho está vazio</h2>
         <p className="mt-2 text-muted-foreground">Adicione alguns produtos para começar a alugar.</p>
         <Button className="mt-4" asChild>
-          <a href="/">Continuar Comprando</a>
+          <a href="/">Continuar alugar</a>
         </Button>
       </div>
     )
@@ -199,10 +199,10 @@ export function CartItems() {
             </CardContent>
             <CardFooter className="flex flex-col gap-2">
               <Button className="w-full" onClick={handleCheckout}>
-                Finalizar Compra
+                Finalizar aluguel
               </Button>
               <Button variant="outline" className="w-full" asChild>
-                <a href="/">Continuar Comprando</a>
+                <a href="/">Continuar aluguel</a>
               </Button>
             </CardFooter>
           </Card>

@@ -113,7 +113,7 @@ export default function CheckoutPage() {
             Voltar
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Finalizar Compra</h1>
+            <h1 className="text-3xl font-bold">Finalizar aluguel</h1>
             <p className="text-muted-foreground">Complete seu pedido em poucos passos</p>
           </div>
         </div>

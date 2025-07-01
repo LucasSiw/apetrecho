@@ -18,7 +18,7 @@ export default function PedidoConfirmadoPage() {
               Pedido Confirmado!
             </CardTitle>
             <p className="text-muted-foreground text-lg">
-              Sua compra foi realizada com sucesso.
+              Seu aluguel foi realizada com sucesso.
             </p>
           </CardHeader>
           <CardContent className="space-y-8 pb-8">
@@ -73,7 +73,7 @@ export default function PedidoConfirmadoPage() {
                 <Link href="/meus-pedidos">Ver Meus Pedidos</Link>
               </Button>
               <Button variant="outline" asChild size="lg">
-                <Link href="/">Continuar Comprando</Link>
+                <Link href="/">Continuar alugando</Link>
               </Button>
             </div>
           </CardContent>

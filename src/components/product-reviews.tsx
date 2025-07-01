@@ -232,7 +232,7 @@ export function ProductReviews({ productId }: ProductReviewsProps) {
                       <span className="font-medium">{review.userName}</span>
                       {review.verified && (
                         <Badge variant="secondary" className="text-xs">
-                          Compra Verificada
+                          Aluguel Verificada
                         </Badge>
                       )}
                     </div>
