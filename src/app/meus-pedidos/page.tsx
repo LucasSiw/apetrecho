@@ -2,25 +2,38 @@
 
 import { useState, useEffect } from "react"
 import { useAuth } from "@/context/auth-context"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Package, CalendarDays, CheckCircle, Clock, XCircle, Loader2 } from "lucide-react"
+import {
+  Package,
+  CalendarDays,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Loader2,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 
-import { getUserRentals, UserOrder } from "@/lib/actions/orders" 
+import { getUserRentals, UserOrder } from "@/lib/actions/orders"
 
 export default function MeusPedidosPage() {
   const { user, loading: authLoading } = useAuth()
-  const [orders, setOrders] = useState<UserOrder[]>([]) 
+  const [orders, setOrders] = useState<UserOrder[]>([])
   const [loadingOrders, setLoadingOrders] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
-    if (authLoading) return; 
+    if (authLoading) return
 
     if (!user) {
-      console.log("Redirecionando para home - usuário não logado para ver pedidos")
       router.push("/")
       return
     }
@@ -28,23 +41,20 @@ export default function MeusPedidosPage() {
     const fetchUserOrders = async () => {
       setLoadingOrders(true)
       try {
-        const result = await getUserRentals(Number(user.id));
-
+        const result = await getUserRentals(Number(user.id))
         if (result.success) {
-          setOrders(result.data);
+          setOrders(result.data)
         } else {
-          console.error("Falha ao carregar aluguéis:", result.message);
+          console.error("Falha ao carregar aluguéis:", result.message)
         }
       } catch (error) {
-        console.error("Erro ao chamar getUserRentals:", error);
+        console.error("Erro ao chamar getUserRentals:", error)
       } finally {
-        setLoadingOrders(false);
+        setLoadingOrders(false)
       }
     }
 
-    if (user && user.id) {
-      fetchUserOrders()
-    }
+    fetchUserOrders()
   }, [user, authLoading, router])
 
   const formatPrice = (price: number) => {
@@ -57,39 +67,45 @@ export default function MeusPedidosPage() {
   const getStatusDisplay = (status: UserOrder["status"]) => {
     switch (status) {
       case "confirmado":
-        return <span className="flex items-center gap-1 text-green-600"><CheckCircle className="h-4 w-4" /> Confirmado</span>
+        return (
+          <span className="flex items-center gap-1 text-green-600">
+            <CheckCircle className="h-4 w-4" /> Confirmado
+          </span>
+        )
       case "processando":
-        return <span className="flex items-center gap-1 text-blue-600"><Clock className="h-4 w-4" /> Processando</span>
+        return (
+          <span className="flex items-center gap-1 text-blue-600">
+            <Clock className="h-4 w-4" /> Processando
+          </span>
+        )
       case "em_transito":
-        return <span className="flex items-center gap-1 text-yellow-600"><Loader2 className="h-4 w-4 animate-spin" /> Em Trânsito</span>
+        return (
+          <span className="flex items-center gap-1 text-yellow-600">
+            <Clock className="h-4 w-4 animate-spin" /> Em Trânsito
+          </span>
+        )
       case "entregue":
-        return <span className="flex items-center gap-1 text-gray-600"><Package className="h-4 w-4" /> Entregue</span>
+        return (
+          <span className="flex items-center gap-1 text-gray-600">
+            <Package className="h-4 w-4" /> Entregue
+          </span>
+        )
       case "cancelado":
-        return <span className="flex items-center gap-1 text-red-600"><XCircle className="h-4 w-4" /> Cancelado</span>
+        return (
+          <span className="flex items-center gap-1 text-red-600">
+            <XCircle className="h-4 w-4" /> Cancelado
+          </span>
+        )
       default:
-        return <span className="flex items-center gap-1 text-gray-500">{status || "Desconhecido"}</span>;
+        return (
+          <span className="flex items-center gap-1 text-gray-500">
+            {status || "Desconhecido"}
+          </span>
+        )
     }
   }
 
-  if (!user) {
-    return (
-      <div className="flex min-h-screen flex-col">
-        <main className="flex-1 container py-8 md:py-12 flex items-center justify-center">
-          <Card className="text-center p-8 max-w-md">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Acesso Negado</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">Você precisa estar logado para visualizar seus pedidos.</p>
-              <Button asChild>
-                <Link href="/login">Fazer Login</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-      </div>
-    )
-  }
+  if (!user) return null
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -97,10 +113,12 @@ export default function MeusPedidosPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl mb-2">Meus Pedidos</h1>
-            <p className="text-muted-foreground">Acompanhe o status dos seus aluguéis e alugueis.</p>
+            <p className="text-muted-foreground">
+              Aqui estão os seus aluguéis realizados.
+            </p>
           </div>
           <Button variant="outline" asChild className="mt-4 md:mt-0">
-            <Link href="/">Continuar alugar/Alugando</Link>
+            <Link href="/">Continuar alugando</Link>
           </Button>
         </div>
 
@@ -115,10 +133,10 @@ export default function MeusPedidosPage() {
               <Package className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">Nenhum pedido encontrado</h3>
               <p className="text-muted-foreground text-center mb-6 max-w-md">
-                Você ainda não realizou nenhum aluguel. Explore nossos produtos e encontre o que precisa!
+                Você ainda não realizou nenhum aluguel. Explore nossos produtos!
               </p>
               <Button asChild>
-                <Link href="/">Começar a Alugar</Link>
+                <Link href="/">Começar a alugar</Link>
               </Button>
             </CardContent>
           </Card>
@@ -126,13 +144,15 @@ export default function MeusPedidosPage() {
           <div className="grid gap-6">
             {orders.map((order) => (
               <Card key={order.id} className="overflow-hidden">
-                <CardHeader className="bg-muted/50 p-4 flex flex-row items-center justify-between">
+                <CardHeader className="bg-muted/50 p-4 flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-xl font-bold">Pedido #{order.id}</CardTitle>
+                    <CardTitle className="text-xl font-bold">Aluguel #{order.id}</CardTitle>
                     <CardDescription className="flex items-center gap-1 text-sm">
                       <CalendarDays className="h-4 w-4" />
                       {new Date(order.date).toLocaleDateString("pt-BR", {
-                        day: '2-digit', month: 'long', year: 'numeric'
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
                       })}
                     </CardDescription>
                   </div>
@@ -141,29 +161,51 @@ export default function MeusPedidosPage() {
                     <div className="font-semibold text-lg">{getStatusDisplay(order.status)}</div>
                   </div>
                 </CardHeader>
+
                 <CardContent className="p-4 space-y-4">
-                  <h3 className="font-semibold text-md">Itens do Pedido:</h3>
+                  <h3 className="font-semibold text-md">Itens alugados:</h3>
                   {order.items.map((item) => (
-                    <div key={item.productId} className="flex items-center gap-4 border-b pb-2 last:border-b-0 last:pb-0">
-                      <img src={item.productImage || "/placeholder.svg"} alt={item.productName} className="h-16 w-16 rounded-md object-cover" />
+                    <div
+                      key={item.productId}
+                      className="flex items-center gap-4 border-b pb-2 last:border-b-0 last:pb-0"
+                    >
+                      <img
+                        src={item.productImage || "/placeholder.svg"}
+                        alt={item.productName}
+                        className="h-16 w-16 rounded-md object-cover"
+                      />
                       <div className="flex-1">
                         <p className="font-medium">{item.productName}</p>
-                        <p className="text-sm text-muted-foreground">Quantidade: {item.quantity}</p>
-                        {item.rentalDuration && <p className="text-sm text-muted-foreground">Duração: {item.rentalDuration}</p>}
+                        {item.rentalDuration && (
+                          <p className="text-sm text-muted-foreground">
+                            Duração: {item.rentalDuration}
+                          </p>
+                        )}
+                        <p className="text-sm text-muted-foreground">
+                          Quantidade: {item.quantity}
+                        </p>
                       </div>
-                      <span className="font-semibold">{formatPrice(item.price * item.quantity)}</span>
+                      <span className="font-semibold">
+                        {formatPrice(item.price * item.quantity)}
+                      </span>
                     </div>
                   ))}
                   <div className="flex justify-between items-center pt-2">
-                    <span className="font-bold text-lg">Total do Pedido:</span>
-                    <span className="font-bold text-xl text-primary">{formatPrice(order.total)}</span>
+                    <span className="font-bold text-lg">Total:</span>
+                    <span className="font-bold text-xl text-primary">
+                      {formatPrice(order.total)}
+                    </span>
                   </div>
                 </CardContent>
-                <CardFooter className="bg-muted/50 p-4 text-sm flex justify-between">
-                    <span>Método de Pagamento: {order.paymentMethod}</span>
-                    {order.estimatedDelivery && (
-                        <span className="text-muted-foreground">Previsão de Entrega/Devolução: {new Date(order.estimatedDelivery).toLocaleDateString("pt-BR")}</span>
-                    )}
+
+                <CardFooter className="bg-muted/50 p-4 text-sm flex flex-col md:flex-row justify-between gap-2">
+                  <span>Método: {order.paymentMethod}</span>
+                  {order.estimatedDelivery && (
+                    <span className="text-muted-foreground">
+                      Devolução estimada:{" "}
+                      {new Date(order.estimatedDelivery).toLocaleDateString("pt-BR")}
+                    </span>
+                  )}
                 </CardFooter>
               </Card>
             ))}

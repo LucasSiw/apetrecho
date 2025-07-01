@@ -16,7 +16,7 @@ import { SiteFooter } from "@/components/site-footer"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "E-commerce - Ferramentas",
+  title: "Apetrecho",
   description: "Plataforma de aluguel de ferramentas",
 }
 
