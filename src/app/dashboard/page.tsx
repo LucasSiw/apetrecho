@@ -92,7 +92,7 @@ export default function DashboardPage() {
       <main className="flex-1 container py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl mb-2">Dashboard de Vendas</h1>
+            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl mb-2">Dashboard de alugueis</h1>
             <p className="text-muted-foreground">Acompanhe o desempenho dos seus produtos</p>
           </div>
           <Button onClick={() => router.push("/meus-produtos")}>
@@ -116,7 +116,7 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Vendas</CardTitle>
+              <CardTitle className="text-sm font-medium">Aluguel</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -152,7 +152,7 @@ export default function DashboardPage() {
           <TabsList>
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="products">Produtos</TabsTrigger>
-            <TabsTrigger value="sales">Vendas</TabsTrigger>
+            <TabsTrigger value="sales">Aluguel</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -192,7 +192,7 @@ export default function DashboardPage() {
                   ) : (
                     <div className="text-center py-8">
                       <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Nenhuma venda registrada ainda</p>
+                      <p className="text-muted-foreground">Nenhuma aluguel registrada ainda</p>
                     </div>
                   )}
                 </CardContent>
@@ -288,14 +288,14 @@ export default function DashboardPage() {
           <TabsContent value="sales" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Histórico de Vendas</CardTitle>
+                <CardTitle>Histórico de aluguel</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8">
                   <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Gráficos de vendas em desenvolvimento</p>
+                  <p className="text-muted-foreground">Gráficos de aluguel em desenvolvimento</p>
                   <p className="text-sm text-muted-foreground mt-2">
-                    Em breve você poderá visualizar gráficos detalhados das suas vendas
+                    Em breve você poderá visualizar gráficos detalhados das suas aluguel
                   </p>
                 </div>
               </CardContent>

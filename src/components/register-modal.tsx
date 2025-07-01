@@ -101,7 +101,7 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-xl">Criar uma conta</DialogTitle>
           <DialogDescription className="text-sm">
-            Registre-se para começar a comprar e acompanhar seus pedidos.
+            Registre-se para começar a alugar e acompanhar seus pedidos.
           </DialogDescription>
         </DialogHeader>
 

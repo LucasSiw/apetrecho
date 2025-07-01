@@ -74,7 +74,7 @@ export default function OrdersPage() {
               </p>
               <Button onClick={() => router.push("/")}>
                 <ShoppingBag className="mr-2 h-4 w-4" />
-                Começar a Comprar
+                Começar a Alugar
               </Button>
             </CardContent>
           </Card>

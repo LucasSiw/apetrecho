@@ -118,7 +118,7 @@ export default function MeusPedidosPage() {
                 Você ainda não realizou nenhum aluguel ou compra. Explore nossos produtos e encontre o que precisa!
               </p>
               <Button asChild>
-                <Link href="/">Começar a Alugar/Comprar</Link>
+                <Link href="/">Começar a Alugar</Link>
               </Button>
             </CardContent>
           </Card>
