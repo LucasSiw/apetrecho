@@ -101,3 +101,12 @@ model tbLogAtividades {
 
   @@map("tbLogAtividades")
 }
+
+model tbEmailVerificado {
+  bdChave     String   @id @default(cuid())
+  bdEmail     String
+  bdCode      String
+  bdExpiresAt DateTime
+  bdVerified  Boolean  @default(false)
+  bdCreatedAt DateTime @default(now())
+}
