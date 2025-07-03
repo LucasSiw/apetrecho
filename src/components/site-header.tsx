@@ -106,7 +106,7 @@ export function SiteHeader() {
                   <Link href="/perfil">Meu Perfil</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/pedidos">Meus Pedidos</Link>
+                  <Link href="/meus-pedidos">Meus Pedidos</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/meus-produtos">Meus Produtos</Link>

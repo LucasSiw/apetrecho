@@ -247,21 +247,35 @@ export function RegisterModal({ isOpen, onClose, onLoginClick }: RegisterModalPr
                 }}
               />
 
-              <Input placeholder="Número" value={numero} onChange={(e) => setNumero(e.target.value)} required />
+              <Label>Logradouro</Label>
+              <Input value={logradouro} onChange={(e) => setLogradouro(e.target.value)} required disabled = {true} />
 
-              <Input placeholder="Complemento" value={complemento} onChange={(e) => setComplemento(e.target.value)} />
+              <Label>Bairro</Label>
+              <Input value={bairro} onChange={(e) => setBairro(e.target.value)} required disabled = {true} />
 
+              <Label>Cidade</Label>
+              <Input value={cidade} onChange={(e) => setCidade(e.target.value)} required disabled = {true} />
+
+              <Label>Estado</Label>
+              <Input value={estado} onChange={(e) => setEstado(e.target.value)} required disabled = {true} />
+
+              <Label>Número</Label>
+              <Input value={numero} onChange={(e) => setNumero(e.target.value)} required />
+
+              <Label>Complemento</Label>
+              <Input value={complemento} onChange={(e) => setComplemento(e.target.value)} />
+
+              <Label>Senha</Label>
               <Input
                 type="password"
-                placeholder="Senha"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
 
+              <Label>Confirmar senha</Label>
               <Input
                 type="password"
-                placeholder="Confirmar senha"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
