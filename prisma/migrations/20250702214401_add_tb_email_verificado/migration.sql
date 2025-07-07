@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE `tbalugueis` ALTER COLUMN `bdDTINICIO` DROP DEFAULT;

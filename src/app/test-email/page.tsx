@@ -5,42 +5,31 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Mail, CheckCircle, XCircle } from "lucide-react"
 
-export default function TestEmailPage() {
+export default function TestGmailPage() {
   const [testEmail, setTestEmail] = useState("")
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<any>(null)
-  const [testResults, setTestResults] = useState<any>(null)
+  const [result, setResult] = useState<any>(null)
 
-  const checkConfiguration = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch("/api/test-email")
-      const data = await response.json()
-      setResults(data)
-    } catch (error) {
-      console.error("Erro ao verificar configuração:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const sendTestEmail = async (provider: "resend" | "gmail") => {
+  const sendTestEmail = async () => {
     if (!testEmail) {
       alert("Digite um email para teste")
       return
     }
 
     setLoading(true)
+    setResult(null)
+
     try {
-      const response = await fetch("/api/test-email", {
+      const response = await fetch("/api/request-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: testEmail, provider }),
+        body: JSON.stringify({ email: testEmail }),
       })
 
       const data = await response.json()
-      setTestResults(data)
+      setResult(data)
 
       if (data.success) {
         alert(`✅ ${data.message}`)
@@ -49,70 +38,45 @@ export default function TestEmailPage() {
       }
     } catch (error) {
       alert("❌ Erro ao enviar email de teste")
+      setResult({ error: "Erro de conexão" })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Teste de Configuração de Email</h1>
+    <div className="container mx-auto p-6 max-w-2xl">
+      <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
+        <Mail className="h-8 w-8" />
+        Teste Gmail SMTP
+      </h1>
 
-      <div className="grid gap-6">
-        {/* Verificação de Configuração */}
+      <div className="space-y-6">
+        {/* Status da Configuração */}
         <Card>
           <CardHeader>
-            <CardTitle>Verificar Configuração</CardTitle>
-            <CardDescription>Verifique se os provedores de email estão configurados corretamente</CardDescription>
+            <CardTitle>Status da Configuração</CardTitle>
+            <CardDescription>Verificação das variáveis de ambiente</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={checkConfiguration} disabled={loading} className="mb-4">
-              {loading ? "Verificando..." : "Verificar Configuração"}
-            </Button>
-
-            {results && (
-              <div className="space-y-4">
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h3 className="font-semibold mb-2">{results.recommendation}</h3>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  {/* Resend Status */}
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-medium">Resend</h4>
-                      <Badge variant={results.providers.resend.working ? "default" : "destructive"}>
-                        {results.providers.resend.configured
-                          ? results.providers.resend.working
-                            ? "✅ Funcionando"
-                            : "❌ Erro"
-                          : "⚠️ Não configurado"}
-                      </Badge>
-                    </div>
-                    {results.providers.resend.error && (
-                      <p className="text-sm text-red-600">{results.providers.resend.error}</p>
-                    )}
-                  </div>
-
-                  {/* Gmail Status */}
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-medium">Gmail</h4>
-                      <Badge variant={results.providers.gmail.working ? "default" : "destructive"}>
-                        {results.providers.gmail.configured
-                          ? results.providers.gmail.working
-                            ? "✅ Funcionando"
-                            : "❌ Erro"
-                          : "⚠️ Não configurado"}
-                      </Badge>
-                    </div>
-                    {results.providers.gmail.error && (
-                      <p className="text-sm text-red-600">{results.providers.gmail.error}</p>
-                    )}
-                  </div>
-                </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span>SMTP_USER</span>
+                <Badge variant="default">apetrecho329@gmail.com</Badge>
               </div>
-            )}
+              <div className="flex items-center justify-between">
+                <span>SMTP_PASS</span>
+                <Badge variant="default">Configurado ✓</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>SMTP_FROM</span>
+                <Badge variant="default">apetrecho329@gmail.com</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Resend</span>
+                <Badge variant="secondary">Desabilitado</Badge>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -120,60 +84,69 @@ export default function TestEmailPage() {
         <Card>
           <CardHeader>
             <CardTitle>Enviar Email de Teste</CardTitle>
-            <CardDescription>Envie um email de teste para verificar se está funcionando</CardDescription>
+            <CardDescription>Digite um email para receber o código de verificação</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <Input
                 type="email"
-                placeholder="Digite seu email para teste"
+                placeholder="Digite o email de destino"
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
               />
 
-              <div className="flex gap-2">
-                <Button onClick={() => sendTestEmail("resend")} disabled={loading} variant="outline">
-                  Testar Resend
-                </Button>
-                <Button onClick={() => sendTestEmail("gmail")} disabled={loading} variant="outline">
-                  Testar Gmail
-                </Button>
-              </div>
+              <Button onClick={sendTestEmail} disabled={loading} className="w-full">
+                {loading ? "Enviando..." : "Enviar Código de Verificação"}
+              </Button>
 
-              {testResults && (
+              {result && (
                 <div
-                  className={`p-4 rounded-lg ${
-                    testResults.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+                  className={`p-4 rounded-lg border ${
+                    result.success
+                      ? "bg-green-50 border-green-200 text-green-800"
+                      : "bg-red-50 border-red-200 text-red-800"
                   }`}
                 >
-                  <p>{testResults.success ? testResults.message : testResults.error}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    {result.success ? <CheckCircle className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                    <span className="font-medium">{result.success ? "Sucesso!" : "Erro"}</span>
+                  </div>
+                  <p className="text-sm">{result.success ? result.message : result.error}</p>
+                  {result.provider && <p className="text-xs mt-1">Provedor: {result.provider}</p>}
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Informações de Configuração */}
+        {/* Instruções */}
         <Card>
           <CardHeader>
-            <CardTitle>Configuração Atual</CardTitle>
-            <CardDescription>Variáveis de ambiente detectadas</CardDescription>
+            <CardTitle>Como obter API Key válida do Resend</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>RESEND_API_KEY:</span>
-                <Badge variant={process.env.NEXT_PUBLIC_RESEND_CONFIGURED ? "default" : "secondary"}>
-                  {typeof window !== "undefined" ? "Configurado" : "Verificando..."}
-                </Badge>
+            <div className="space-y-3 text-sm">
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="font-medium text-blue-800 mb-2">Para usar Resend:</p>
+                <ol className="list-decimal list-inside space-y-1 text-blue-700">
+                  <li>
+                    Acesse{" "}
+                    <a href="https://resend.com" target="_blank" className="underline" rel="noreferrer">
+                      resend.com
+                    </a>
+                  </li>
+                  <li>Crie uma conta gratuita</li>
+                  <li>Vá em "API Keys"</li>
+                  <li>Clique em "Create API Key"</li>
+                  <li>Copie a chave (começa com "re_")</li>
+                  <li>Adicione no .env.local: RESEND_API_KEY=re_sua_chave</li>
+                </ol>
               </div>
-              <div className="flex justify-between">
-                <span>SMTP_USER:</span>
-                <Badge variant="default">apetrecho329@gmail.com</Badge>
-              </div>
-              <div className="flex justify-between">
-                <span>SMTP_PASS:</span>
-                <Badge variant="default">Configurado (senha de aplicativo)</Badge>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-gray-700">
+                  <strong>Por enquanto:</strong> Gmail está funcionando perfeitamente para seu projeto. Você pode
+                  continuar usando apenas Gmail até decidir configurar Resend.
+                </p>
               </div>
             </div>
           </CardContent>

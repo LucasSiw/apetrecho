@@ -1,21 +1,25 @@
 import { Resend } from "resend"
 
-// Verificar se a API key existe
+// Verificar se a API key existe e é válida
 const apiKey = process.env.RESEND_API_KEY
 
-if (!apiKey) {
-  console.error("❌ RESEND_API_KEY não encontrada nas variáveis de ambiente")
-  throw new Error("RESEND_API_KEY é obrigatória. Adicione-a ao arquivo .env.local")
+let resend: Resend | null = null
+
+if (apiKey && apiKey.startsWith("re_")) {
+  resend = new Resend(apiKey)
+  console.log("✅ Resend configurado com sucesso")
+} else {
+  console.log("⚠️ Resend não configurado ou API key inválida")
 }
 
-const resend = new Resend(apiKey)
-
 export async function sendVerificationEmail(email: string, code: string) {
+  if (!resend) {
+    throw new Error("RESEND_NOT_CONFIGURED")
+  }
+
   try {
-    // Para contas Resend gratuitas, só pode enviar para o email cadastrado
-    // ou usar onboarding@resend.dev como remetente
     const { data, error } = await resend.emails.send({
-      from: "onboarding@resend.dev", // Email de teste do Resend - funciona para qualquer destinatário
+      from: "onboarding@resend.dev", // Email de teste do Resend
       to: [email],
       subject: "Código de Verificação - Apetrecho",
       html: `
@@ -76,10 +80,21 @@ export async function sendVerificationEmail(email: string, code: string) {
 export async function verifyResendConnection() {
   try {
     if (!apiKey) {
-      throw new Error("RESEND_API_KEY não configurada")
+      console.log("⚠️ RESEND_API_KEY não configurada")
+      return false
     }
 
-    console.log("✅ Resend API Key configurada")
+    if (!apiKey.startsWith("re_")) {
+      console.log("⚠️ RESEND_API_KEY inválida (deve começar com 're_')")
+      return false
+    }
+
+    if (!resend) {
+      console.log("⚠️ Resend não inicializado")
+      return false
+    }
+
+    console.log("✅ Resend configurado corretamente")
     return true
   } catch (error) {
     console.error("❌ Erro na conexão Resend:", error)

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/database"
 
-// Importar ambas as opções
-import { sendVerificationEmail, verifyResendConnection } from "@/lib/resend-mailer"
+// Importar apenas Gmail por enquanto
 import { sendVerificationEmailGmail, verifyGmailConnection } from "@/lib/gmail-mailer"
 
 export async function POST(req: Request) {
@@ -36,50 +35,33 @@ export async function POST(req: Request) {
     let emailProvider = ""
     let lastError = ""
 
-    // Estratégia: Tentar Gmail primeiro (mais confiável para produção)
-    // depois Resend como fallback
-
-    // Opção 1: Tentar Gmail primeiro
+    // Usar apenas Gmail (que está funcionando)
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       try {
+        console.log("🔄 Enviando via Gmail...")
         const gmailConnected = await verifyGmailConnection()
         if (gmailConnected) {
           await sendVerificationEmailGmail(email, code)
           emailSent = true
           emailProvider = "Gmail"
+          console.log("✅ Email enviado via Gmail com sucesso")
+        } else {
+          lastError = "Gmail não conectou"
         }
       } catch (error) {
-        console.log("⚠️ Gmail falhou, tentando Resend...")
+        console.error("❌ Gmail falhou:", error)
         lastError = error instanceof Error ? error.message : "Erro Gmail desconhecido"
       }
-    }
-
-    // Opção 2: Fallback para Resend (apenas se Gmail falhar)
-    if (!emailSent && process.env.RESEND_API_KEY) {
-      try {
-        const resendConnected = await verifyResendConnection()
-        if (resendConnected) {
-          await sendVerificationEmail(email, code)
-          emailSent = true
-          emailProvider = "Resend"
-        }
-      } catch (error) {
-        console.error("❌ Resend também falhou:", error)
-
-        // Se for erro de domínio do Resend, usar mensagem específica
-        if (error instanceof Error && error.message === "RESEND_DOMAIN_NOT_VERIFIED") {
-          lastError = "Resend: Domínio não verificado. Configure um domínio em resend.com/domains"
-        } else {
-          lastError = error instanceof Error ? error.message : "Erro Resend desconhecido"
-        }
-      }
+    } else {
+      lastError = "Credenciais Gmail não configuradas"
     }
 
     if (!emailSent) {
+      console.error("❌ Falha ao enviar email via Gmail")
       return NextResponse.json(
         {
-          error: `Falha ao enviar email. Último erro: ${lastError}`,
-          details: "Verifique as configurações de email ou configure um domínio no Resend.",
+          error: `Falha ao enviar email via Gmail: ${lastError}`,
+          details: "Verifique as configurações de SMTP do Gmail",
         },
         { status: 500 },
       )
@@ -93,7 +75,7 @@ export async function POST(req: Request) {
       provider: emailProvider,
     })
   } catch (error) {
-    console.error("❌ Erro ao enviar código:", error)
+    console.error("❌ Erro geral ao enviar código:", error)
 
     if (error instanceof Error) {
       return NextResponse.json({ error: `Erro ao enviar email: ${error.message}` }, { status: 500 })
